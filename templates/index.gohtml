@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>GoLang Pz3</title>
+</head>
+<body>
+<table>
+    <thead>
+    <th>Id</th>
+    <th>Model</th>
+    <th>Company</th>
+    <th>Price</th>
+    {{ range . }}
+        {{- /*gotype: go-pz3.Product*/ -}}
+        <tr>
+            <td>{{ .Id }}</td>
+            <td>{{ .Model }}</td>
+            <td>{{ .Company }}</td>
+            <td>{{ .Price }}</td>
+        </tr>
+    {{ end }}
+    </thead>
+</table>
+
+<button onclick="location.href = '/create'">Add product</button>
+
+</body>
+</html>
