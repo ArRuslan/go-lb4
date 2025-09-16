@@ -40,7 +40,7 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 		products = append(products, product)
 	}
 
-	tmpl, _ := template.ParseFiles("templates/index.gohtml")
+	tmpl, _ := template.ParseFiles("templates/index.gohtml", "templates/layout.gohtml")
 	err = tmpl.Execute(w, products)
 	if err != nil {
 		log.Println(err)
@@ -89,7 +89,7 @@ func createHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	tmpl, _ := template.ParseFiles("templates/create.gohtml")
+	tmpl, _ := template.ParseFiles("templates/create.gohtml", "templates/layout.gohtml")
 	err := tmpl.Execute(w, resp)
 	if err != nil {
 		log.Println(err)
@@ -158,7 +158,7 @@ func editHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	tmpl, _ := template.ParseFiles("templates/edit.gohtml")
+	tmpl, _ := template.ParseFiles("templates/edit.gohtml", "templates/layout.gohtml")
 	err = tmpl.Execute(w, resp)
 	if err != nil {
 		log.Println(err)
@@ -205,7 +205,7 @@ func deleteHandler(w http.ResponseWriter, r *http.Request) {
 		resp.Error += "Database error occurred. "
 	}
 
-	tmpl, _ := template.ParseFiles("templates/delete.gohtml")
+	tmpl, _ := template.ParseFiles("templates/delete.gohtml", "templates/layout.gohtml")
 	err = tmpl.Execute(w, resp)
 	if err != nil {
 		log.Println(err)
