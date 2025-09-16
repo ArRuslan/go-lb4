@@ -12,6 +12,7 @@
     <th>Model</th>
     <th>Company</th>
     <th>Price</th>
+    <th>Actions</th>
     {{ range . }}
         {{- /*gotype: go-pz3.Product*/ -}}
         <tr>
@@ -19,6 +20,10 @@
             <td>{{ .Model }}</td>
             <td>{{ .Company }}</td>
             <td>{{ .Price }}</td>
+            <td>
+                <a href="/products/{{.Id}}/edit">Edit</a>
+                <a href="/products/{{.Id}}/delete">Delete</a>
+            </td>
         </tr>
     {{ end }}
     </thead>

@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>GoLang Pz3 - Add product</title>
+</head>
+<body>
+{{- /*gotype: go-pz3.ProductTmplContext*/ -}}
+{{if .Error }}
+    <h3 style="color: red">{{.Error}}</h3>
+{{end}}
+<form action="" method="POST">
+    <input type="text" name="model" placeholder="Model" value="{{.Product.Model}}"/>
+    <input type="text" name="company" placeholder="Company" value="{{.Product.Company}}"/>
+    <input type="number" name="price" placeholder="Price" value="{{.Product.Price}}"/>
+    <button type="submit">Edit product</button>
+</form>
+</body>
+</html>

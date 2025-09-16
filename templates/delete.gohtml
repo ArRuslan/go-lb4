@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>GoLang Pz3 - Add product</title>
+</head>
+<body>
+{{- /*gotype: go-pz3.ProductTmplContext*/ -}}
+{{if .Error }}
+    <h3 style="color: red">{{.Error}}</h3>
+{{end}}
+
+<h3>Are you sure you want to delete product "{{.Product.Model}}" (id {{.Product.Id}})?</h3>
+<form action="" method="POST">
+    <button type="submit">Delete</button>
+</form>
+
+<button onclick="location.href = '/'">Cancel</button>
+</body>
+</html>
