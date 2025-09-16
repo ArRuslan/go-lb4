@@ -4,18 +4,33 @@
 <head>
     <meta charset="UTF-8">
     <title>GoLang Pz3 - Add product</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
+            crossorigin="anonymous"></script>
 </head>
 <body>
-{{- /*gotype: go-pz3.ProductTmplContext*/ -}}
-{{if .Error }}
-    <h3 style="color: red">{{.Error}}</h3>
-{{end}}
 
-<h3>Are you sure you want to delete product "{{.Product.Model}}" (id {{.Product.Id}})?</h3>
-<form action="" method="POST">
-    <button type="submit">Delete</button>
-</form>
+<div class="container-fluid p-3">
 
-<button onclick="location.href = '/'">Cancel</button>
+    {{- /*gotype: go-pz3.ProductTmplContext*/ -}}
+    {{if .Error }}
+        <h3 style="color: red">{{.Error}}</h3>
+    {{end}}
+
+    <div class="d-flex align-items-center justify-content-center w-100">
+        <h3>Are you sure you want to delete product "{{.Product.Model}}" (id {{.Product.Id}})?</h3>
+    </div>
+
+    <form action="" method="POST">
+        <div class="btn-group d-flex" role="group">
+            <a role="button" href="/" class="btn btn-danger w-100">Cancel</a>
+            <button type="submit" class="btn btn-warning w-100">Delete</button>
+        </div>
+    </form>
+
+</div>
+
 </body>
 </html>

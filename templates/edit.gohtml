@@ -4,17 +4,41 @@
 <head>
     <meta charset="UTF-8">
     <title>GoLang Pz3 - Add product</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
+            crossorigin="anonymous"></script>
 </head>
 <body>
-{{- /*gotype: go-pz3.ProductTmplContext*/ -}}
-{{if .Error }}
-    <h3 style="color: red">{{.Error}}</h3>
-{{end}}
-<form action="" method="POST">
-    <input type="text" name="model" placeholder="Model" value="{{.Product.Model}}"/>
-    <input type="text" name="company" placeholder="Company" value="{{.Product.Company}}"/>
-    <input type="number" name="price" placeholder="Price" value="{{.Product.Price}}"/>
-    <button type="submit">Edit product</button>
-</form>
+
+<div class="container-fluid p-3">
+
+    {{- /*gotype: go-pz3.ProductTmplContext*/ -}}
+    {{if .Error }}
+        <h3 style="color: red">{{.Error}}</h3>
+    {{end}}
+
+    <form action="" method="POST">
+        <div class="mb-3">
+            <label for="input-model" class="form-label">Model</label>
+            <input type="text" name="model" placeholder="Model" value="{{.Product.Model}}" class="form-control" id="input-model"/>
+        </div>
+        <div class="mb-3">
+            <label for="input-model" class="form-label">Company</label>
+            <input type="text" name="company" placeholder="Company" value="{{.Product.Company}}" class="form-control" id="input-company"/>
+        </div>
+        <div class="mb-3">
+            <label for="input-model" class="form-label">Price</label>
+            <input type="number" name="price" placeholder="Price" value="{{.Product.Price}}" class="form-control" id="input-price"/>
+        </div>
+
+        <div class="d-flex align-items-center justify-content-end gap-2 w-100">
+            <a type="button" class="btn btn-danger" href="/">Cancel</a>
+            <button type="submit" class="btn btn-primary ml-2">Edit product</button>
+        </div>
+    </form>
+</div>
+
 </body>
 </html>
