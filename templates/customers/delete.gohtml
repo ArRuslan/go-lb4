@@ -1,0 +1,21 @@
+{{template "layout.gohtml" .}}
+
+{{define "title"}}GoLang Pz3 - Delete customer{{end}}
+
+{{define "content"}}
+    {{- /*gotype: go-pz3.CustomerTmplContext*/ -}}
+    {{if .Error }}
+        <h3 style="color: red">{{.Error}}</h3>
+    {{end}}
+
+    <div class="d-flex align-items-center justify-content-center w-100">
+        <h3>Are you sure you want to delete product "{{.Customer.FirstName}} {{.Customer.LastName}}" (id {{.Customer.Id}})?</h3>
+    </div>
+
+    <form action="" method="POST">
+        <div class="btn-group d-flex" role="group">
+            <a role="button" href="/customers" class="btn btn-danger w-100">Cancel</a>
+            <button type="submit" class="btn btn-warning w-100">Delete</button>
+        </div>
+    </form>
+{{end}}
