@@ -26,10 +26,16 @@ func main() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/products", 301)
 	})
-	http.HandleFunc("/products", indexHandler)
-	http.HandleFunc("/products/create", createHandler)
-	http.HandleFunc("/products/{productId}/edit", editHandler)
-	http.HandleFunc("/products/{productId}/delete", deleteHandler)
+
+	http.HandleFunc("/products", productsListHandler)
+	http.HandleFunc("/products/create", productCreateHandler)
+	http.HandleFunc("/products/{productId}/edit", productEditHandler)
+	http.HandleFunc("/products/{productId}/delete", productDeleteHandler)
+
+	http.HandleFunc("/categories", categoriesListHandler)
+	http.HandleFunc("/categories/create", categoryCreateHandler)
+	http.HandleFunc("/categories/{productId}/edit", categoryEditHandler)
+	http.HandleFunc("/categories/{productId}/delete", categoryDeleteHandler)
 
 	fmt.Println("Server is listening on port 8081")
 	err = http.ListenAndServe("127.0.0.1:8081", nil)

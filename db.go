@@ -147,3 +147,82 @@ func (product *Product) dbDelete() error {
 	_, err := database.Exec("DELETE FROM `products` WHERE `id`=?;", product.Id)
 	return err
 }
+
+func getCategories(page, pageSize int) ([]Category, int, error) {
+	return getRowsAndCount(
+		page,
+		pageSize,
+		func(page, pageSize int) (*sql.Rows, error) {
+			return database.Query(
+				`SELECT 
+    				c.id, c.name, COALESCE(c.description, '')
+				FROM categories c
+				ORDER BY c.id LIMIT ? OFFSET ?;`,
+				pageSize, (page-1)*pageSize,
+			)
+		},
+		func(rows *sql.Rows) (Category, error) {
+			category := Category{}
+			err := rows.Scan(
+				&category.Id, &category.Name, &category.Description,
+			)
+			return category, err
+		},
+		func() *sql.Row {
+			return database.QueryRow("SELECT COUNT(*) FROM `categories`;")
+		},
+	)
+}
+
+func createCategory(category Category) error {
+	var description sql.NullString
+	if category.Description == "" {
+		description = sql.NullString{}
+	} else {
+		description = sql.NullString{String: category.Description, Valid: true}
+	}
+
+	_, err := database.Exec(
+		"INSERT INTO categories (name, description) VALUES (?, ?);",
+		category.Name, description,
+	)
+	return err
+}
+
+func getCategory(categoryId int) (Category, error) {
+	var category Category
+
+	row := database.QueryRow(
+		"SELECT c.id, c.name, COALESCE(c.description, '') FROM categories c WHERE c.id = ?;",
+		categoryId,
+	)
+	err := row.Scan(
+		&category.Id, &category.Name, &category.Description,
+	)
+
+	return category, err
+}
+
+func (category *Category) dbSave() error {
+	if category.Id > 0 {
+		var description sql.NullString
+		if category.Description == "" {
+			description = sql.NullString{}
+		} else {
+			description = sql.NullString{String: category.Description, Valid: true}
+		}
+
+		_, err := database.Exec(
+			"UPDATE categories SET name=?, description=? WHERE id=?;",
+			category.Name, description, category.Id,
+		)
+		return err
+	}
+
+	return createCategory(*category)
+}
+
+func (category *Category) dbDelete() error {
+	_, err := database.Exec("DELETE FROM `categories` WHERE `id`=?;", category.Id)
+	return err
+}

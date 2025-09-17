@@ -15,10 +15,10 @@ type ProductsListTmplContext struct {
 	Count    int
 }
 
-func indexHandler(w http.ResponseWriter, r *http.Request) {
+func productsListHandler(w http.ResponseWriter, r *http.Request) {
 	products, count, err := getProducts(getPageAndSize(r))
 
-	tmpl, _ := template.ParseFiles("templates/index.gohtml", "templates/layout.gohtml")
+	tmpl, _ := template.ParseFiles("templates/products/list.gohtml", "templates/layout.gohtml")
 	err = tmpl.Execute(w, ProductsListTmplContext{
 		Products: products,
 		Count:    count,
@@ -40,7 +40,7 @@ type CreateProductTmplContext struct {
 	Error string
 }
 
-func createHandler(w http.ResponseWriter, r *http.Request) {
+func productCreateHandler(w http.ResponseWriter, r *http.Request) {
 	var resp CreateProductTmplContext
 
 	if r.Method == "POST" {
@@ -61,12 +61,12 @@ func createHandler(w http.ResponseWriter, r *http.Request) {
 				log.Println(err)
 			}
 
-			http.Redirect(w, r, "/", 301)
+			http.Redirect(w, r, "/products", 301)
 			return
 		}
 	}
 
-	tmpl, _ := template.ParseFiles("templates/create.gohtml", "templates/layout.gohtml")
+	tmpl, _ := template.ParseFiles("templates/products/create.gohtml", "templates/layout.gohtml")
 	err := tmpl.Execute(w, resp)
 	if err != nil {
 		log.Println(err)
@@ -85,11 +85,11 @@ type EditProductTmplContext struct {
 	Error string
 }
 
-func editHandler(w http.ResponseWriter, r *http.Request) {
+func productEditHandler(w http.ResponseWriter, r *http.Request) {
 	productIdStr := r.PathValue("productId")
 	productId, err := strconv.Atoi(productIdStr)
 	if err != nil {
-		http.Redirect(w, r, "/", 301)
+		http.Redirect(w, r, "/products", 301)
 		return
 	}
 
@@ -130,7 +130,7 @@ func editHandler(w http.ResponseWriter, r *http.Request) {
 		if allGood {
 			err = product.dbSave()
 			if err == nil {
-				http.Redirect(w, r, "/", 301)
+				http.Redirect(w, r, "/products", 301)
 				return
 			}
 
@@ -139,7 +139,7 @@ func editHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	tmpl, _ := template.ParseFiles("templates/edit.gohtml", "templates/layout.gohtml")
+	tmpl, _ := template.ParseFiles("templates/products/edit.gohtml", "templates/layout.gohtml")
 	err = tmpl.Execute(w, resp)
 	if err != nil {
 		log.Println(err)
@@ -151,11 +151,11 @@ type ProductTmplContext struct {
 	Error   string
 }
 
-func deleteHandler(w http.ResponseWriter, r *http.Request) {
+func productDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	productIdStr := r.PathValue("productId")
 	productId, err := strconv.Atoi(productIdStr)
 	if err != nil {
-		http.Redirect(w, r, "/", 301)
+		http.Redirect(w, r, "/products", 301)
 		return
 	}
 
@@ -180,7 +180,7 @@ func deleteHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		err = product.dbDelete()
 		if err == nil {
-			http.Redirect(w, r, "/", 301)
+			http.Redirect(w, r, "/products", 301)
 			return
 		}
 
@@ -188,7 +188,7 @@ func deleteHandler(w http.ResponseWriter, r *http.Request) {
 		resp.Error += "Database error occurred. "
 	}
 
-	tmpl, _ := template.ParseFiles("templates/delete.gohtml", "templates/layout.gohtml")
+	tmpl, _ := template.ParseFiles("templates/products/delete.gohtml", "templates/layout.gohtml")
 	err = tmpl.Execute(w, resp)
 	if err != nil {
 		log.Println(err)

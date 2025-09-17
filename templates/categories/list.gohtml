@@ -1,0 +1,37 @@
+{{template "layout.gohtml" .}}
+
+{{define "title"}}GoLang Pz3 - Categories{{end}}
+
+{{define "content"}}
+    <div class="d-flex align-items-center justify-content-end w-100">
+        <a href="/categories/create" role="button" class="btn btn-primary flex-end">Add category</a>
+    </div>
+
+    {{- /*gotype: go-pz3.CategoriesListTmplContext*/ -}}
+
+        {{.Count}}
+
+    <table class="table mt-2">
+        <thead>
+        <tr>
+            <th scope="col">Id</th>
+            <th scope="col">Name</th>
+            <th scope="col">Description</th>
+            <th scope="col">Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        {{ range .Categories }}
+            <tr>
+                <td scope="row">{{ .Id }}</td>
+                <td>{{ .Name }}</td>
+                <td>{{ .Description }}</td>
+                <td>
+                    <a role="button" class="btn btn-primary" href="/categories/{{.Id}}/edit">Edit</a>
+                    <a role="button" class="btn btn-danger" href="/categories/{{.Id}}/delete">Delete</a>
+                </td>
+            </tr>
+        {{ end }}
+        </tbody>
+    </table>
+{{end}}
