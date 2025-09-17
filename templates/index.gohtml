@@ -4,7 +4,7 @@
 
 {{define "content"}}
     <div class="d-flex align-items-center justify-content-end w-100">
-        <a href="/create" role="button" class="btn btn-primary flex-end">Add product</a>
+        <a href="/products/create" role="button" class="btn btn-primary flex-end">Add product</a>
     </div>
 
     {{- /*gotype: go-pz3.ProductsListTmplContext*/ -}}
@@ -15,9 +15,13 @@
         <thead>
         <tr>
             <th scope="col">Id</th>
+            <th scope="col">Category</th>
             <th scope="col">Model</th>
-            <th scope="col">Company</th>
+            <th scope="col">Manufacturer</th>
             <th scope="col">Price</th>
+            <th scope="col">Quantity</th>
+            <th scope="col">Image Url</th>
+            <th scope="col">Warranty Days</th>
             <th scope="col">Actions</th>
         </tr>
         </thead>
@@ -25,9 +29,13 @@
         {{ range .Products }}
             <tr>
                 <td scope="row">{{ .Id }}</td>
+                <td>{{ .Category.Name }}</td>
                 <td>{{ .Model }}</td>
-                <td>{{ .Company }}</td>
+                <td>{{ .Manufacturer }}</td>
                 <td>{{ .Price }}</td>
+                <td>{{ .Quantity }}</td>
+                <td>{{ .ImageUrl }}</td>
+                <td>{{ .WarrantyDays }}</td>
                 <td>
                     <a role="button" class="btn btn-primary" href="/products/{{.Id}}/edit">Edit</a>
                     <a role="button" class="btn btn-danger" href="/products/{{.Id}}/delete">Delete</a>

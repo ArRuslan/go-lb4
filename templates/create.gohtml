@@ -11,19 +11,35 @@
     <form action="" method="POST">
         <div class="mb-3">
             <label for="input-model" class="form-label">Model</label>
-            <input type="text" name="model" placeholder="Model" value="{{.Model}}" class="form-control" id="input-model"/>
+            <input type="text" name="model" placeholder="Model" value="{{.Model}}" class="form-control" id="input-model" required/>
         </div>
         <div class="mb-3">
-            <label for="input-model" class="form-label">Company</label>
-            <input type="text" name="company" placeholder="Company" value="{{.Company}}" class="form-control" id="input-company"/>
+            <label for="input-manufacturer" class="form-label">Manufacturer</label>
+            <input type="text" name="manufacturer" placeholder="Manufacturer" value="{{.Manufacturer}}" class="form-control" id="input-manufacturer" required/>
         </div>
         <div class="mb-3">
-            <label for="input-model" class="form-label">Price</label>
-            <input type="number" name="price" placeholder="Price" value="{{.Price}}" class="form-control" id="input-price"/>
+            <label for="input-price" class="form-label">Price</label>
+            <input type="number" name="price" placeholder="Price" value="{{.Price}}" class="form-control" id="input-price" required/>
+        </div>
+        <div class="mb-3">
+            <label for="input-quantity" class="form-label">Quantity</label>
+            <input type="number" name="quantity" placeholder="Quantity" value="{{.Quantity}}" class="form-control" id="input-quantity" required/>
+        </div>
+        <div class="mb-3">
+            <label for="input-warranty_days" class="form-label">Warranty Days</label>
+            <input type="number" name="warranty_days" placeholder="Warranty Days" value="{{.WarrantyDays}}" class="form-control" id="input-warranty_days" required/>
+        </div>
+        <div class="mb-3">
+            <label for="input-image_url" class="form-label">Image Url</label>
+            <input type="text" name="image_url" placeholder="Image Url" value="{{.ImageUrl}}" class="form-control" id="input-image_url"/>
+        </div>
+        <div class="mb-3">
+            <label for="input-category_id" class="form-label">Category Id</label>
+            <input type="number" name="category_id" placeholder="Category Id" value="{{.CategoryId}}" class="form-control" id="input-category_id"/>
         </div>
 
         <div class="d-flex align-items-center justify-content-end gap-2 w-100">
-            <a type="button" class="btn btn-danger" href="/">Cancel</a>
+            <a type="button" class="btn btn-danger" href="/products">Cancel</a>
             <button type="submit" class="btn btn-primary ml-2">Add product</button>
         </div>
     </form>
