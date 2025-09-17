@@ -1,0 +1,26 @@
+{{template "layout.gohtml" .}}
+
+{{define "title"}}GoLang Pz3 - Add characteristic{{end}}
+
+{{define "content"}}
+    {{- /*gotype: go-pz3.CreateCharacteristicTmplContext*/ -}}
+    {{if .Error }}
+        <h3 style="color: red">{{.Error}}</h3>
+    {{end}}
+
+    <form action="" method="POST">
+        <div class="mb-3">
+            <label for="input-name" class="form-label">Name</label>
+            <input type="text" name="name" placeholder="Name" value="{{.Name}}" class="form-control" id="input-name" required/>
+        </div>
+        <div class="mb-3">
+            <label for="input-measurement_unit" class="form-label">Measurement Unit</label>
+            <input type="text" name="measurement_unit" placeholder="Measurement Unit" value="{{.Unit}}" class="form-control" id="input-measurement_unit"/>
+        </div>
+
+        <div class="d-flex align-items-center justify-content-end gap-2 w-100">
+            <a type="button" class="btn btn-danger" href="/characteristics">Cancel</a>
+            <button type="submit" class="btn btn-primary ml-2">Add characteristic</button>
+        </div>
+    </form>
+{{end}}

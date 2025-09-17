@@ -226,3 +226,82 @@ func (category *Category) dbDelete() error {
 	_, err := database.Exec("DELETE FROM `categories` WHERE `id`=?;", category.Id)
 	return err
 }
+
+func getCharacteristics(page, pageSize int) ([]Characteristic, int, error) {
+	return getRowsAndCount(
+		page,
+		pageSize,
+		func(page, pageSize int) (*sql.Rows, error) {
+			return database.Query(
+				`SELECT 
+    				c.id, c.name, COALESCE(c.measurement_unit, '')
+				FROM characteristics c
+				ORDER BY c.id LIMIT ? OFFSET ?;`,
+				pageSize, (page-1)*pageSize,
+			)
+		},
+		func(rows *sql.Rows) (Characteristic, error) {
+			characteristic := Characteristic{}
+			err := rows.Scan(
+				&characteristic.Id, &characteristic.Name, &characteristic.Unit,
+			)
+			return characteristic, err
+		},
+		func() *sql.Row {
+			return database.QueryRow("SELECT COUNT(*) FROM `characteristics`;")
+		},
+	)
+}
+
+func createCharacteristic(characteristic Characteristic) error {
+	var unit sql.NullString
+	if characteristic.Unit == "" {
+		unit = sql.NullString{}
+	} else {
+		unit = sql.NullString{String: characteristic.Unit, Valid: true}
+	}
+
+	_, err := database.Exec(
+		"INSERT INTO characteristics (name, measurement_unit) VALUES (?, ?);",
+		characteristic.Name, unit,
+	)
+	return err
+}
+
+func getCharacteristic(characteristicId int) (Characteristic, error) {
+	var characteristic Characteristic
+
+	row := database.QueryRow(
+		"SELECT c.id, c.name, COALESCE(c.measurement_unit, '') FROM characteristics c WHERE c.id = ?;",
+		characteristicId,
+	)
+	err := row.Scan(
+		&characteristic.Id, &characteristic.Name, &characteristic.Unit,
+	)
+
+	return characteristic, err
+}
+
+func (characteristic *Characteristic) dbSave() error {
+	if characteristic.Id > 0 {
+		var unit sql.NullString
+		if characteristic.Unit == "" {
+			unit = sql.NullString{}
+		} else {
+			unit = sql.NullString{String: characteristic.Unit, Valid: true}
+		}
+
+		_, err := database.Exec(
+			"UPDATE characteristics SET name=?, measurement_unit=? WHERE id=?;",
+			characteristic.Name, unit, characteristic.Id,
+		)
+		return err
+	}
+
+	return createCharacteristic(*characteristic)
+}
+
+func (characteristic *Characteristic) dbDelete() error {
+	_, err := database.Exec("DELETE FROM `characteristics` WHERE `id`=?;", characteristic.Id)
+	return err
+}
