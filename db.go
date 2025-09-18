@@ -350,15 +350,40 @@ func getCustomers(page, pageSize int) ([]Customer, int, error) {
 		},
 		func(rows *sql.Rows) (Customer, error) {
 			customer := Customer{}
-			err := rows.Scan(
-				&customer.Id, &customer.FirstName, &customer.LastName, &customer.Email,
-			)
+			err := rows.Scan(&customer.Id, &customer.FirstName, &customer.LastName, &customer.Email)
 			return customer, err
 		},
 		func() *sql.Row {
 			return database.QueryRow("SELECT COUNT(*) FROM `customers`;")
 		},
 	)
+}
+
+func searchCustomersByEmail(emailPart string, limit int) ([]Customer, error) {
+	customers, _, err := getRowsAndCount(
+		1,
+		limit,
+		func(page, pageSize int) (*sql.Rows, error) {
+			return database.Query(
+				`SELECT 
+    				c.id, c.first_name, c.last_name, c.email
+				FROM customers c
+				WHERE LOWER(c.email) like ?
+				ORDER BY c.id LIMIT ?;`,
+				"%"+strings.ToLower(emailPart)+"%", pageSize,
+			)
+		},
+		func(rows *sql.Rows) (Customer, error) {
+			customer := Customer{}
+			err := rows.Scan(&customer.Id, &customer.FirstName, &customer.LastName, &customer.Email)
+			return customer, err
+		},
+		func() *sql.Row {
+			return database.QueryRow("SELECT 0;")
+		},
+	)
+
+	return customers, err
 }
 
 func createCustomer(customer Customer) error {

@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"html/template"
@@ -25,6 +26,25 @@ func ordersListHandler(w http.ResponseWriter, r *http.Request) {
 	})
 	if err != nil {
 		log.Println(err)
+	}
+}
+
+func customersSearchHandler(w http.ResponseWriter, r *http.Request) {
+	var customers []Customer
+
+	emailPart := r.URL.Query().Get("email")
+	if emailPart != "" {
+		_, pageSize := getPageAndSize(r)
+		customers, _ = searchCustomersByEmail(emailPart, pageSize)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+
+	if len(customers) > 0 {
+		customersJson, _ := json.Marshal(customers)
+		w.Write(customersJson)
+	} else {
+		w.Write([]byte("[]"))
 	}
 }
 

@@ -31,4 +31,26 @@
             <button type="submit" class="btn btn-primary ml-2">Add order</button>
         </div>
     </form>
+
+    <script>
+        $("#input-customer_email").autoComplete({
+            bootstrapVersion: "5",
+            minLength: 1,
+            preventEnter: true,
+            resolver: "ajax",
+            resolverSettings: {
+                url: "/customers/search",
+                queryKey: "email",
+            },
+            formatResult: (item) => {
+                return {id: item.Id, text: `${item.FirstName} ${item.LastName} (${item.Email})`};
+            },
+        });
+
+        $("#input-customer_email").on("autocomplete.select", (evt, item) => {
+            $("#input-customer_first_name").val(item.FirstName);
+            $("#input-customer_last_name").val(item.LastName);
+            $("#input-customer_email").val(item.Email);
+        });
+    </script>
 {{end}}

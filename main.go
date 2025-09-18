@@ -47,6 +47,7 @@ func main() {
 	http.HandleFunc("/customers/create", customerCreateHandler)
 	http.HandleFunc("/customers/{customerId}/edit", customerEditHandler)
 	http.HandleFunc("/customers/{customerId}/delete", customerDeleteHandler)
+	http.HandleFunc("/customers/search", customersSearchHandler)
 
 	http.HandleFunc("/orders", ordersListHandler)
 	http.HandleFunc("/orders/create", orderCreateHandler)
