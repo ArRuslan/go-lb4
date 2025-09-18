@@ -1,0 +1,39 @@
+{{template "layout.gohtml" .}}
+
+{{define "title"}}GoLang Pz3 - Orders{{end}}
+
+{{define "content"}}
+    <div class="d-flex align-items-center justify-content-end w-100">
+        <a href="/orders/create" role="button" class="btn btn-primary flex-end">Add order</a>
+    </div>
+
+    {{- /*gotype: go-pz3.OrdersListTmplContext*/ -}}
+
+        {{.Count}}
+
+    <table class="table mt-2">
+        <thead>
+        <tr>
+            <th scope="col">Id</th>
+            <th scope="col">Customer Name</th>
+            <th scope="col">Customer Email</th>
+            <th scope="col">Address</th>
+            <th scope="col">Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        {{ range .Orders }}
+            <tr>
+                <td scope="row">{{ .Id }}</td>
+                <td>{{ .Customer.FirstName }} {{ .Customer.LastName }}</td>
+                <td>{{ .Customer.Email }}</td>
+                <td>{{ .Address }}</td>
+                <td>
+                    <a role="button" class="btn btn-primary" href="/orders/{{.Id}}/edit">Edit</a>
+                    <a role="button" class="btn btn-danger" href="/orders/{{.Id}}/delete">Delete</a>
+                </td>
+            </tr>
+        {{ end }}
+        </tbody>
+    </table>
+{{end}}

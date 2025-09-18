@@ -47,6 +47,11 @@ func main() {
 	http.HandleFunc("/customers/{customerId}/edit", customerEditHandler)
 	http.HandleFunc("/customers/{customerId}/delete", customerDeleteHandler)
 
+	http.HandleFunc("/orders", ordersListHandler)
+	http.HandleFunc("/orders/create", orderCreateHandler)
+	http.HandleFunc("/orders/{orderId}/edit", orderEditHandler)
+	http.HandleFunc("/orders/{orderId}/delete", orderDeleteHandler)
+
 	fmt.Println("Server is listening on port 8081")
 	err = http.ListenAndServe("127.0.0.1:8081", nil)
 	if err != nil {

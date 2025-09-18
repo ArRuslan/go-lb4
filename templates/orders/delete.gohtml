@@ -1,20 +1,20 @@
 {{template "layout.gohtml" .}}
 
-{{define "title"}}GoLang Pz3 - Delete characteristic{{end}}
+{{define "title"}}GoLang Pz3 - Delete order{{end}}
 
 {{define "content"}}
-    {{- /*gotype: go-pz3.CharacteristicTmplContext*/ -}}
+    {{- /*gotype: go-pz3.OrderTmplContext*/ -}}
     {{if .Error }}
         <h3 style="color: red">{{.Error}}</h3>
     {{end}}
 
     <div class="d-flex align-items-center justify-content-center w-100">
-        <h3>Are you sure you want to delete characteristic "{{.Characteristic.Name}}" (id {{.Characteristic.Id}})?</h3>
+        <h3>Are you sure you want to delete order (id {{.Order.Id}})?</h3>
     </div>
 
     <form action="" method="POST">
         <div class="btn-group d-flex" role="group">
-            <a role="button" href="/characteristics" class="btn btn-danger w-100">Cancel</a>
+            <a role="button" href="/orders" class="btn btn-danger w-100">Cancel</a>
             <button type="submit" class="btn btn-warning w-100">Delete</button>
         </div>
     </form>

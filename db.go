@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 )
@@ -354,7 +355,29 @@ func getCustomer(customerId int) (Customer, error) {
 	return customer, err
 }
 
+func getCustomerByEmail(email string) (Customer, error) {
+	var customer Customer
+
+	row := database.QueryRow(
+		"SELECT c.id, c.first_name, c.last_name, c.email FROM customers c WHERE c.email = ?;",
+		email,
+	)
+	err := row.Scan(
+		&customer.Id, &customer.FirstName, &customer.LastName, &customer.Email,
+	)
+
+	return customer, err
+}
+
 func (customer *Customer) dbSave() error {
+	if customer.Id == 0 {
+		row := database.QueryRow("SELECT c.id FROM customers c WHERE c.email = ?;", customer.Email)
+		err := row.Scan(&customer.Id)
+		if err != nil && !errors.Is(err, sql.ErrNoRows) {
+			return err
+		}
+	}
+
 	if customer.Id > 0 {
 		_, err := database.Exec(
 			"UPDATE customers SET first_name=?, last_name=?, email=? WHERE id=?;",
@@ -368,5 +391,109 @@ func (customer *Customer) dbSave() error {
 
 func (customer *Customer) dbDelete() error {
 	_, err := database.Exec("DELETE FROM `customers` WHERE `id`=?;", customer.Id)
+	return err
+}
+
+func getOrders(page, pageSize int) ([]Order, int, error) {
+	return getRowsAndCount(
+		page,
+		pageSize,
+		func(page, pageSize int) (*sql.Rows, error) {
+			return database.Query(
+				`SELECT 
+    				o.id, o.address,
+    				COALESCE(c.id, 0), COALESCE(c.first_name, ''), COALESCE(c.last_name, ''), COALESCE(c.email, '')
+				FROM orders o 
+				LEFT OUTER JOIN customers c ON o.customer_id = c.id
+				ORDER BY o.id LIMIT ? OFFSET ?;`,
+				pageSize, (page-1)*pageSize,
+			)
+		},
+		func(rows *sql.Rows) (Order, error) {
+			order := Order{}
+			err := rows.Scan(
+				&order.Id, &order.Address,
+				&order.Customer.Id, &order.Customer.FirstName, &order.Customer.LastName, &order.Customer.Email,
+			)
+			return order, err
+		},
+		func() *sql.Row {
+			return database.QueryRow("SELECT COUNT(*) FROM `orders`;")
+		},
+	)
+}
+
+func createOrder(order Order) error {
+	if order.Customer.Email != "" {
+		err := order.Customer.dbSave()
+		if err != nil {
+			return err
+		}
+		if order.Customer.Id == 0 {
+			customerByEmail, err := getCustomerByEmail(order.Customer.Email)
+			if err != nil {
+				return err
+			}
+			order.Customer = customerByEmail
+		}
+	}
+
+	var customerId sql.NullInt64
+	if order.Customer.Id == 0 {
+		customerId = sql.NullInt64{}
+	} else {
+		customerId = sql.NullInt64{Int64: order.Customer.Id, Valid: true}
+	}
+
+	_, err := database.Exec(
+		"INSERT INTO orders (address, customer_id) VALUES (?, ?);",
+		order.Address, customerId,
+	)
+	return err
+}
+
+func getOrder(orderId int) (Order, error) {
+	var order Order
+
+	row := database.QueryRow(
+		`SELECT 
+    		o.id, o.address,
+    		COALESCE(c.id, 0), COALESCE(c.first_name, ''), COALESCE(c.last_name, ''), COALESCE(c.email, '')
+		FROM orders o 
+		LEFT OUTER JOIN customers c ON o.customer_id = c.id
+		WHERE o.id = ?;`,
+		orderId,
+	)
+	err := row.Scan(
+		&order.Id, &order.Address,
+		&order.Customer.Id, &order.Customer.FirstName, &order.Customer.LastName, &order.Customer.Email,
+	)
+
+	return order, err
+}
+
+func (order *Order) dbSave() error {
+	if order.Id > 0 {
+		var customerId sql.NullInt64
+		if order.Customer.Id == 0 {
+			customerId = sql.NullInt64{}
+		} else {
+			customerId = sql.NullInt64{Int64: order.Customer.Id, Valid: true}
+		}
+
+		_, err := database.Exec(
+			`UPDATE orders 
+			SET address=?, customer_id=?
+			WHERE id=?;`,
+			order.Address, customerId, order.Id,
+		)
+		return err
+	}
+
+	return createOrder(*order)
+}
+
+func (order *Order) dbDelete() error {
+	_, err := database.Exec("DELETE FROM `orders` WHERE `id`=?;", order.Id)
 	return err
 }
