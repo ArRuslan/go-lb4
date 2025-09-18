@@ -81,6 +81,7 @@ type EditProductTmplContext struct {
 	ImageUrl     string
 	WarrantyDays string
 	CategoryId   string
+	CategoryName string
 
 	Error string
 }
@@ -114,6 +115,7 @@ func productEditHandler(w http.ResponseWriter, r *http.Request) {
 		ImageUrl:     product.ImageUrl,
 		WarrantyDays: strconv.FormatInt(int64(product.WarrantyDays), 10),
 		CategoryId:   strconv.FormatInt(product.Category.Id, 10),
+		CategoryName: product.Category.Name,
 	}
 
 	if r.Method == "POST" {
@@ -126,6 +128,7 @@ func productEditHandler(w http.ResponseWriter, r *http.Request) {
 		product.WarrantyDays = getFormInt(r, "warranty_days", &resp.Error, &allGood, &resp.ImageUrl)
 		product.ImageUrl = getFormString(r, "image_url", &resp.Error, &allGood, &resp.WarrantyDays)
 		product.Category.Id = getFormInt64(r, "category_id", &resp.Error, &allGood, &resp.CategoryId)
+		resp.CategoryName = r.FormValue("_category_name")
 
 		if allGood {
 			err = product.dbSave()

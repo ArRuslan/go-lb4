@@ -58,13 +58,11 @@
                 queryKey: "name",
             },
             formatResult: (item) => {
-                console.log(item)
                 return {id: item.Id, text: item.Name};
             },
         });
 
         $("#input-categoryAutocomplete").on("autocomplete.select", (evt, item) => {
-            console.log("SELECT", item);
             $("#input-category_id").val(item.Id)
         });
     </script>
