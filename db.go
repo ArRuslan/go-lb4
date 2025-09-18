@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strings"
 )
 
 var database *sql.DB
@@ -202,6 +203,33 @@ func getCategory(categoryId int) (Category, error) {
 	)
 
 	return category, err
+}
+
+func searchCategories(namePart string, limit int) ([]Category, error) {
+	categories, _, err := getRowsAndCount(
+		1,
+		limit,
+		func(page, pageSize int) (*sql.Rows, error) {
+			return database.Query(
+				`SELECT 
+    				c.id, c.name, COALESCE(c.description, '')
+				FROM categories c
+				WHERE LOWER(c.name) like ?
+				ORDER BY c.id LIMIT ?;`,
+				"%"+strings.ToLower(namePart)+"%", pageSize,
+			)
+		},
+		func(rows *sql.Rows) (Category, error) {
+			category := Category{}
+			err := rows.Scan(&category.Id, &category.Name, &category.Description)
+			return category, err
+		},
+		func() *sql.Row {
+			return database.QueryRow("SELECT 0;")
+		},
+	)
+
+	return categories, err
 }
 
 func (category *Category) dbSave() error {

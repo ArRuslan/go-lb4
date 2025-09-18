@@ -51,8 +51,8 @@ func productCreateHandler(w http.ResponseWriter, r *http.Request) {
 		newProduct.Manufacturer = getFormStringNonEmpty(r, "manufacturer", &resp.Error, &allGood, &resp.Manufacturer)
 		newProduct.Price = getFormDouble(r, "price", &resp.Error, &allGood, &resp.Price)
 		newProduct.Quantity = getFormInt(r, "quantity", &resp.Error, &allGood, &resp.Quantity)
-		newProduct.WarrantyDays = getFormInt(r, "warranty_days", &resp.Error, &allGood, &resp.ImageUrl)
-		newProduct.ImageUrl = getFormString(r, "image_url", &resp.Error, &allGood, &resp.WarrantyDays)
+		newProduct.WarrantyDays = getFormInt(r, "warranty_days", &resp.Error, &allGood, &resp.WarrantyDays)
+		newProduct.ImageUrl = getFormString(r, "image_url", &resp.Error, &allGood, &resp.ImageUrl)
 		newProduct.Category.Id = getFormInt64(r, "category_id", &resp.Error, &allGood, &resp.CategoryId)
 
 		if allGood {

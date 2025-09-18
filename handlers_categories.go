@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"html/template"
@@ -25,6 +26,25 @@ func categoriesListHandler(w http.ResponseWriter, r *http.Request) {
 	})
 	if err != nil {
 		log.Println(err)
+	}
+}
+
+func categoriesSearchHandler(w http.ResponseWriter, r *http.Request) {
+	var categories []Category
+
+	namePart := r.URL.Query().Get("name")
+	if namePart != "" {
+		_, pageSize := getPageAndSize(r)
+		categories, _ = searchCategories(namePart, pageSize)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+
+	if len(categories) > 0 {
+		categoriesJson, _ := json.Marshal(categories)
+		w.Write(categoriesJson)
+	} else {
+		w.Write([]byte("[]"))
 	}
 }
 

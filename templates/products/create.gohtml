@@ -34,8 +34,11 @@
             <input type="text" name="image_url" placeholder="Image Url" value="{{.ImageUrl}}" class="form-control" id="input-image_url"/>
         </div>
         <div class="mb-3">
-            <label for="input-category_id" class="form-label">Category Id</label>
-            <input type="number" name="category_id" placeholder="Category Id" value="{{.CategoryId}}" class="form-control" id="input-category_id"/>
+            <input type="hidden" name="category_id" placeholder="Category Id" value="{{.CategoryId}}" class="form-control" id="input-category_id"/>
+        </div>
+        <div class="mb-3">
+            <label for="input-categoryAutocomplete" class="form-label">Category Name</label>
+            <input type="text" placeholder="Category Name" class="form-control" id="input-categoryAutocomplete"/>
         </div>
 
         <div class="d-flex align-items-center justify-content-end gap-2 w-100">
@@ -43,4 +46,26 @@
             <button type="submit" class="btn btn-primary ml-2">Add product</button>
         </div>
     </form>
+
+    <script>
+        $("#input-categoryAutocomplete").autoComplete({
+            bootstrapVersion: "5",
+            minLength: 1,
+            preventEnter: true,
+            resolver: "ajax",
+            resolverSettings: {
+                url: "/categories/search",
+                queryKey: "name",
+            },
+            formatResult: (item) => {
+                console.log(item)
+                return {id: item.Id, text: item.Name};
+            },
+        });
+
+        $("#input-categoryAutocomplete").on("autocomplete.select", (evt, item) => {
+            console.log("SELECT", item);
+            $("#input-category_id").val(item.Id)
+		});
+    </script>
 {{end}}
