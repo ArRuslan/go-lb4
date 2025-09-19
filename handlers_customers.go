@@ -11,6 +11,8 @@ import (
 )
 
 type CustomersListTmplContext struct {
+	BaseTmplContext
+
 	Customers []Customer
 	Count     int
 }
@@ -20,6 +22,9 @@ func customersListHandler(w http.ResponseWriter, r *http.Request) {
 
 	tmpl, _ := template.ParseFiles("templates/customers/list.gohtml", "templates/layout.gohtml")
 	err = tmpl.Execute(w, CustomersListTmplContext{
+		BaseTmplContext: BaseTmplContext{
+			Type: "customers",
+		},
 		Customers: customers,
 		Count:     count,
 	})
@@ -29,6 +34,8 @@ func customersListHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type CreateCustomerTmplContext struct {
+	BaseTmplContext
+
 	FirstName string
 	LastName  string
 	Email     string
@@ -37,7 +44,11 @@ type CreateCustomerTmplContext struct {
 }
 
 func customerCreateHandler(w http.ResponseWriter, r *http.Request) {
-	var resp CreateCustomerTmplContext
+	resp := CreateCustomerTmplContext{
+		BaseTmplContext: BaseTmplContext{
+			Type: "customers",
+		},
+	}
 
 	if r.Method == "POST" {
 		allGood := true
@@ -66,6 +77,8 @@ func customerCreateHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type EditCustomerTmplContext struct {
+	BaseTmplContext
+
 	FirstName string
 	LastName  string
 	Email     string
@@ -95,6 +108,9 @@ func customerEditHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp := EditCustomerTmplContext{
+		BaseTmplContext: BaseTmplContext{
+			Type: "customers",
+		},
 		FirstName: customer.FirstName,
 		LastName:  customer.LastName,
 		Email:     customer.Email,
@@ -127,6 +143,7 @@ func customerEditHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type CustomerTmplContext struct {
+	BaseTmplContext
 	Customer Customer
 	Error    string
 }
@@ -153,6 +170,9 @@ func customerDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp := CustomerTmplContext{
+		BaseTmplContext: BaseTmplContext{
+			Type: "customers",
+		},
 		Customer: customer,
 		Error:    "",
 	}

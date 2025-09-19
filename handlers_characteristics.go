@@ -12,6 +12,8 @@ import (
 )
 
 type CharacteristicsListTmplContext struct {
+	BaseTmplContext
+
 	Characteristics []Characteristic
 	Count           int
 }
@@ -21,6 +23,9 @@ func characteristicsListHandler(w http.ResponseWriter, r *http.Request) {
 
 	tmpl, _ := template.ParseFiles("templates/characteristics/list.gohtml", "templates/layout.gohtml")
 	err = tmpl.Execute(w, CharacteristicsListTmplContext{
+		BaseTmplContext: BaseTmplContext{
+			Type: "characteristics",
+		},
 		Characteristics: characteristics,
 		Count:           count,
 	})
@@ -49,6 +54,8 @@ func characteristicsSearchHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type CreateCharacteristicTmplContext struct {
+	BaseTmplContext
+
 	Name string
 	Unit string
 
@@ -56,7 +63,11 @@ type CreateCharacteristicTmplContext struct {
 }
 
 func characteristicCreateHandler(w http.ResponseWriter, r *http.Request) {
-	var resp CreateCharacteristicTmplContext
+	resp := CreateCharacteristicTmplContext{
+		BaseTmplContext: BaseTmplContext{
+			Type: "characteristics",
+		},
+	}
 
 	if r.Method == "POST" {
 		allGood := true
@@ -84,6 +95,8 @@ func characteristicCreateHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type EditCharacteristicTmplContext struct {
+	BaseTmplContext
+
 	Name string
 	Unit string
 
@@ -112,6 +125,9 @@ func characteristicEditHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp := EditCharacteristicTmplContext{
+		BaseTmplContext: BaseTmplContext{
+			Type: "characteristics",
+		},
 		Name: characteristic.Name,
 		Unit: characteristic.Unit,
 	}
@@ -142,6 +158,7 @@ func characteristicEditHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type CharacteristicTmplContext struct {
+	BaseTmplContext
 	Characteristic Characteristic
 	Error          string
 }
@@ -168,6 +185,9 @@ func characteristicDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp := CharacteristicTmplContext{
+		BaseTmplContext: BaseTmplContext{
+			Type: "characteristics",
+		},
 		Characteristic: characteristic,
 		Error:          "",
 	}

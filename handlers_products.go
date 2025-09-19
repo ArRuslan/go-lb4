@@ -11,6 +11,8 @@ import (
 )
 
 type ProductsListTmplContext struct {
+	BaseTmplContext
+
 	Products []Product
 	Count    int
 }
@@ -20,6 +22,9 @@ func productsListHandler(w http.ResponseWriter, r *http.Request) {
 
 	tmpl, _ := template.ParseFiles("templates/products/list.gohtml", "templates/layout.gohtml")
 	err = tmpl.Execute(w, ProductsListTmplContext{
+		BaseTmplContext: BaseTmplContext{
+			Type: "products",
+		},
 		Products: products,
 		Count:    count,
 	})
@@ -29,6 +34,8 @@ func productsListHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type CreateProductTmplContext struct {
+	BaseTmplContext
+
 	Model        string
 	Manufacturer string
 	Price        string
@@ -41,7 +48,11 @@ type CreateProductTmplContext struct {
 }
 
 func productCreateHandler(w http.ResponseWriter, r *http.Request) {
-	var resp CreateProductTmplContext
+	resp := CreateProductTmplContext{
+		BaseTmplContext: BaseTmplContext{
+			Type: "products",
+		},
+	}
 
 	if r.Method == "POST" {
 		allGood := true
@@ -74,6 +85,8 @@ func productCreateHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type EditProductTmplContext struct {
+	BaseTmplContext
+
 	Model        string
 	Manufacturer string
 	Price        string
@@ -116,6 +129,9 @@ func productEditHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp := EditProductTmplContext{
+		BaseTmplContext: BaseTmplContext{
+			Type: "products",
+		},
 		Model:        product.Model,
 		Manufacturer: product.Manufacturer,
 		Price:        strconv.FormatFloat(product.Price, 'f', 2, 64),
@@ -159,6 +175,8 @@ func productEditHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type ProductTmplContext struct {
+	BaseTmplContext
+
 	Product      Product
 	BackLocation string
 	Error        string
@@ -194,6 +212,9 @@ func productDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp := ProductTmplContext{
+		BaseTmplContext: BaseTmplContext{
+			Type: "products",
+		},
 		Product:      product,
 		BackLocation: backLocation,
 		Error:        "",
@@ -218,6 +239,8 @@ func productDeleteHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type ProductWithCharacteristicsTmplContext struct {
+	BaseTmplContext
+
 	Product         Product
 	Characteristics []ProductCharacteristic
 	Error           string
@@ -254,6 +277,9 @@ func productPageHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp := ProductWithCharacteristicsTmplContext{
+		BaseTmplContext: BaseTmplContext{
+			Type: "products",
+		},
 		Product:         product,
 		Characteristics: characteristics,
 		Error:           "",

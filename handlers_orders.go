@@ -12,6 +12,7 @@ import (
 )
 
 type OrdersListTmplContext struct {
+	BaseTmplContext
 	Orders []Order
 	Count  int
 }
@@ -21,6 +22,9 @@ func ordersListHandler(w http.ResponseWriter, r *http.Request) {
 
 	tmpl, _ := template.ParseFiles("templates/orders/list.gohtml", "templates/layout.gohtml")
 	err = tmpl.Execute(w, OrdersListTmplContext{
+		BaseTmplContext: BaseTmplContext{
+			Type: "orders",
+		},
 		Orders: orders,
 		Count:  count,
 	})
@@ -49,6 +53,8 @@ func customersSearchHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type CreateOrderTmplContext struct {
+	BaseTmplContext
+
 	CustomerEmail     string
 	CustomerFirstName string
 	CustomerLastName  string
@@ -58,7 +64,11 @@ type CreateOrderTmplContext struct {
 }
 
 func orderCreateHandler(w http.ResponseWriter, r *http.Request) {
-	var resp CreateOrderTmplContext
+	resp := CreateOrderTmplContext{
+		BaseTmplContext: BaseTmplContext{
+			Type: "orders",
+		},
+	}
 
 	if r.Method == "POST" {
 		allGood := true
@@ -88,6 +98,8 @@ func orderCreateHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type EditOrderTmplContext struct {
+	BaseTmplContext
+
 	CustomerEmailReadonly     string
 	CustomerFirstNameReadonly string
 	CustomerLastNameReadonly  string
@@ -119,6 +131,9 @@ func orderEditHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp := EditOrderTmplContext{
+		BaseTmplContext: BaseTmplContext{
+			Type: "orders",
+		},
 		CustomerEmailReadonly:     order.Customer.Email,
 		CustomerFirstNameReadonly: order.Customer.FirstName,
 		CustomerLastNameReadonly:  order.Customer.LastName,
@@ -150,6 +165,8 @@ func orderEditHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type OrderTmplContext struct {
+	BaseTmplContext
+
 	Order Order
 	Error string
 }
@@ -177,6 +194,9 @@ func orderDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp := OrderTmplContext{
+		BaseTmplContext: BaseTmplContext{
+			Type: "orders",
+		},
 		Order: order,
 		Error: "",
 	}

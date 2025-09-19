@@ -41,7 +41,7 @@
             <a href="/products/{{ .Product.Id }}/delete?back=product" role="button" class="btn btn-danger flex-end">Delete</a>
         </div>
 
-        <form action="/products/{{ .Product.Id }}/characteristics" method="POST" class="row mt-3 w-50">
+        <form action="/products/{{ .Product.Id }}/characteristics" method="POST" class="row mt-3">
             <div class="col">
                 <input type="hidden" name="characteristic_id" id="input-char_id">
                 <input type="text" class="form-control" placeholder="Characteristic" id="input-char_name">

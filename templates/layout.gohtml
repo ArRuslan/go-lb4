@@ -11,8 +11,79 @@
 </head>
 <body>
 
+{{- /*gotype: go-pz3.BaseTmplContext*/ -}}
+
 <div class="container-fluid p-3">
-    {{block "content" .}}{{end}}
+    <div class="row">
+        <div class="col flex-grow-0">
+            <div class="d-flex flex-column flex-shrink-0 p-3 bg-light" style="width: 200px;">
+                <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto link-dark text-decoration-none">
+                    <span class="fs-4">GoLang Pz3</span>
+                </a>
+                <hr>
+                <ul class="nav nav-pills flex-column mb-auto">
+                    <li class="nav-item">
+                        <a href="/products"
+                        {{ if eq .Type "products" }}
+                            class="nav-link active" aria-current="page"
+                        {{ else }}
+                            class="nav-link link-dark"
+                        {{ end }}
+                        >
+                            Products
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/categories"
+                        {{ if eq .Type "categories" }}
+                            class="nav-link active" aria-current="page"
+                        {{ else }}
+                            class="nav-link link-dark"
+                        {{ end }}
+                        >
+                            Categories
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/characteristics"
+                        {{ if eq .Type "characteristics" }}
+                            class="nav-link active" aria-current="page"
+                        {{ else }}
+                            class="nav-link link-dark"
+                        {{ end }}
+                        >
+                            Characteristics
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/customers"
+                        {{ if eq .Type "customers" }}
+                            class="nav-link active" aria-current="page"
+                        {{ else }}
+                            class="nav-link link-dark"
+                        {{ end }}
+                        >
+                            Customers
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/orders"
+                        {{ if eq .Type "orders" }}
+                            class="nav-link active" aria-current="page"
+                        {{ else }}
+                            class="nav-link link-dark"
+                        {{ end }}
+                        >
+                            Orders
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="col flex-grow-1">
+            {{block "content" .}}{{end}}
+        </div>
+    </div>
 </div>
 
 </body>

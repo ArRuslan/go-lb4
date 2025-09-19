@@ -12,6 +12,8 @@ import (
 )
 
 type CategoriesListTmplContext struct {
+	BaseTmplContext
+
 	Categories []Category
 	Count      int
 }
@@ -21,6 +23,9 @@ func categoriesListHandler(w http.ResponseWriter, r *http.Request) {
 
 	tmpl, _ := template.ParseFiles("templates/categories/list.gohtml", "templates/layout.gohtml")
 	err = tmpl.Execute(w, CategoriesListTmplContext{
+		BaseTmplContext: BaseTmplContext{
+			Type: "categories",
+		},
 		Categories: categories,
 		Count:      count,
 	})
@@ -49,6 +54,8 @@ func categoriesSearchHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type CreateCategoryTmplContext struct {
+	BaseTmplContext
+
 	Name        string
 	Description string
 
@@ -56,7 +63,11 @@ type CreateCategoryTmplContext struct {
 }
 
 func categoryCreateHandler(w http.ResponseWriter, r *http.Request) {
-	var resp CreateCategoryTmplContext
+	resp := CreateCategoryTmplContext{
+		BaseTmplContext: BaseTmplContext{
+			Type: "categories",
+		},
+	}
 
 	if r.Method == "POST" {
 		allGood := true
@@ -84,6 +95,8 @@ func categoryCreateHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type EditCategoryTmplContext struct {
+	BaseTmplContext
+
 	Name        string
 	Description string
 
@@ -112,6 +125,9 @@ func categoryEditHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp := EditCategoryTmplContext{
+		BaseTmplContext: BaseTmplContext{
+			Type: "categories",
+		},
 		Name:        category.Name,
 		Description: category.Description,
 	}
@@ -142,6 +158,8 @@ func categoryEditHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type CategoryTmplContext struct {
+	BaseTmplContext
+
 	Category Category
 	Error    string
 }
@@ -168,6 +186,9 @@ func categoryDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp := CategoryTmplContext{
+		BaseTmplContext: BaseTmplContext{
+			Type: "categories",
+		},
 		Category: category,
 		Error:    "",
 	}
