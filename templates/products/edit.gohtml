@@ -3,7 +3,7 @@
 {{define "title"}}GoLang Pz3 - Edit product{{end}}
 
 {{define "content"}}
-    {{- /*gotype: go-pz3.ProductTmplContext*/ -}}
+    {{- /*gotype: go-pz3.EditProductTmplContext*/ -}}
     {{if .Error }}
         <h3 style="color: red">{{.Error}}</h3>
     {{end}}
@@ -42,7 +42,7 @@
         </div>
 
         <div class="d-flex align-items-center justify-content-end gap-2 w-100">
-            <a type="button" class="btn btn-danger" href="/products">Cancel</a>
+            <a type="button" class="btn btn-danger" href="{{ .BackLocation }}">Cancel</a>
             <button type="submit" class="btn btn-primary ml-2">Edit product</button>
         </div>
     </form>

@@ -28,7 +28,7 @@
         <tbody>
         {{ range .Products }}
             <tr>
-                <td scope="row">{{ .Id }}</td>
+                <td scope="row"><a href="/products/{{ .Id }}">{{ .Id }}</a></td>
                 <td>{{ .Category.Name }}</td>
                 <td>{{ .Model }}</td>
                 <td>{{ .Manufacturer }}</td>

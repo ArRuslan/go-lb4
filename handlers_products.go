@@ -83,15 +83,23 @@ type EditProductTmplContext struct {
 	CategoryId   string
 	CategoryName string
 
-	Error string
+	BackLocation string
+	Error        string
 }
 
 func productEditHandler(w http.ResponseWriter, r *http.Request) {
+	backLocation := r.URL.Query().Get("back")
 	productIdStr := r.PathValue("productId")
 	productId, err := strconv.Atoi(productIdStr)
 	if err != nil {
 		http.Redirect(w, r, "/products", 301)
 		return
+	}
+
+	if backLocation == "product" {
+		backLocation = "/products/" + productIdStr
+	} else {
+		backLocation = "/products"
 	}
 
 	product, err := getProduct(productId)
@@ -116,6 +124,7 @@ func productEditHandler(w http.ResponseWriter, r *http.Request) {
 		WarrantyDays: strconv.FormatInt(int64(product.WarrantyDays), 10),
 		CategoryId:   strconv.FormatInt(product.Category.Id, 10),
 		CategoryName: product.Category.Name,
+		BackLocation: backLocation,
 	}
 
 	if r.Method == "POST" {
@@ -133,7 +142,7 @@ func productEditHandler(w http.ResponseWriter, r *http.Request) {
 		if allGood {
 			err = product.dbSave()
 			if err == nil {
-				http.Redirect(w, r, "/products", 301)
+				http.Redirect(w, r, backLocation, 301)
 				return
 			}
 
@@ -150,16 +159,25 @@ func productEditHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type ProductTmplContext struct {
-	Product Product
-	Error   string
+	Product      Product
+	BackLocation string
+	Error        string
 }
 
 func productDeleteHandler(w http.ResponseWriter, r *http.Request) {
+	backLocation := r.URL.Query().Get("back")
+
 	productIdStr := r.PathValue("productId")
 	productId, err := strconv.Atoi(productIdStr)
 	if err != nil {
 		http.Redirect(w, r, "/products", 301)
 		return
+	}
+
+	if backLocation == "product" {
+		backLocation = "/products/" + productIdStr
+	} else {
+		backLocation = "/products"
 	}
 
 	product, err := getProduct(productId)
@@ -176,14 +194,15 @@ func productDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp := ProductTmplContext{
-		Product: product,
-		Error:   "",
+		Product:      product,
+		BackLocation: backLocation,
+		Error:        "",
 	}
 
 	if r.Method == "POST" {
 		err = product.dbDelete()
 		if err == nil {
-			http.Redirect(w, r, "/products", 301)
+			http.Redirect(w, r, backLocation, 301)
 			return
 		}
 
@@ -192,6 +211,55 @@ func productDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	tmpl, _ := template.ParseFiles("templates/products/delete.gohtml", "templates/layout.gohtml")
+	err = tmpl.Execute(w, resp)
+	if err != nil {
+		log.Println(err)
+	}
+}
+
+type ProductWithCharacteristicsTmplContext struct {
+	Product         Product
+	Characteristics []ProductCharacteristic
+	Error           string
+}
+
+func productPageHandler(w http.ResponseWriter, r *http.Request) {
+	productIdStr := r.PathValue("productId")
+	productId, err := strconv.Atoi(productIdStr)
+	if err != nil {
+		http.Redirect(w, r, "/products", 301)
+		return
+	}
+
+	product, err := getProduct(productId)
+	if errors.Is(err, sql.ErrNoRows) {
+		w.WriteHeader(404)
+		w.Write([]byte("Unknown product!"))
+		return
+	}
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(500)
+		w.Write([]byte("Database error occurred!"))
+		return
+	}
+
+	var characteristics []ProductCharacteristic
+	characteristics, _, err = getProductCharacteristics(product.Id)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(500)
+		w.Write([]byte("Database error occurred!"))
+		return
+	}
+
+	resp := ProductWithCharacteristicsTmplContext{
+		Product:         product,
+		Characteristics: characteristics,
+		Error:           "",
+	}
+
+	tmpl, _ := template.ParseFiles("templates/products/product.gohtml", "templates/layout.gohtml")
 	err = tmpl.Execute(w, resp)
 	if err != nil {
 		log.Println(err)

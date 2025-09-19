@@ -550,3 +550,61 @@ func (order *Order) dbDelete() error {
 	_, err := database.Exec("DELETE FROM `orders` WHERE `id`=?;", order.Id)
 	return err
 }
+
+func getProductCharacteristics(productId int64) ([]ProductCharacteristic, int, error) {
+	return getRowsAndCount(
+		1,
+		2,
+		func(page, pageSize int) (*sql.Rows, error) {
+			return database.Query(
+				`SELECT 
+    				p.id, p.product_id, p.value,
+    				c.id, c.name, COALESCE(c.measurement_unit, '')
+				FROM product_characteristics p 
+				LEFT OUTER JOIN characteristics c ON p.characteristic_id = c.id
+				WHERE p.product_id = ?
+				ORDER BY p.id;`,
+				productId,
+			)
+		},
+		func(rows *sql.Rows) (ProductCharacteristic, error) {
+			char := ProductCharacteristic{}
+			err := rows.Scan(
+				&char.Id, &char.ProductId, &char.Value,
+				&char.Characteristic.Id, &char.Characteristic.Name, &char.Characteristic.Unit,
+			)
+			return char, err
+		},
+		func() *sql.Row {
+			return database.QueryRow("SELECT COUNT(*) FROM `product_characteristics` WHERE product_id=?;", productId)
+		},
+	)
+}
+
+func createProductCharacteristic(char ProductCharacteristic) error {
+	_, err := database.Exec(
+		`INSERT INTO product_characteristics (product_id, characteristic_id, value) 
+		VALUES (?, ?, ?);`,
+		char.ProductId, char.Characteristic.Id, char.Value,
+	)
+	return err
+}
+
+func (char *ProductCharacteristic) dbSave() error {
+	if char.Id > 0 {
+		_, err := database.Exec(
+			`UPDATE product_characteristics 
+			SET value=?
+			WHERE id=?;`,
+			char.Value, char.Id,
+		)
+		return err
+	}
+
+	return createProductCharacteristic(*char)
+}
+
+func (char *ProductCharacteristic) dbDelete() error {
+	_, err := database.Exec("DELETE FROM `product_characteristics` WHERE `id`=?;", char.Id)
+	return err
+}

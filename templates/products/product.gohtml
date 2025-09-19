@@ -1,0 +1,71 @@
+{{- /*gotype: go-pz3.ProductWithCharacteristicsTmplContext*/ -}}
+
+{{template "layout.gohtml" .}}
+
+{{define "title"}}GoLang Pz3 - Product "{{ .Product.Model }}"{{end}}
+
+{{define "content"}}
+    <dl class="row">
+        <dt class="col-sm-3">Id</dt>
+        <dd class="col-sm-9">{{ .Product.Id }}</dd>
+
+        <dt class="col-sm-3">Category</dt>
+        <dd class="col-sm-9">
+            {{ if .Product.Category.Name }} {{ .Product.Category.Name }} {{ else }} - {{ end }}
+        </dd>
+
+        <dt class="col-sm-3">Model</dt>
+        <dd class="col-sm-9">{{ .Product.Model }}</dd>
+
+        <dt class="col-sm-3">Manufacturer</dt>
+        <dd class="col-sm-9">{{ .Product.Manufacturer }}</dd>
+
+        <dt class="col-sm-3">Price</dt>
+        <dd class="col-sm-9">{{ .Product.Price }}</dd>
+
+        <dt class="col-sm-3">Quantity</dt>
+        <dd class="col-sm-9">{{ .Product.Quantity }}</dd>
+
+        <dt class="col-sm-3">Warranty Days</dt>
+        <dd class="col-sm-9">{{ .Product.WarrantyDays }}</dd>
+
+        <dt class="col-sm-3">Image Url</dt>
+        <dd class="col-sm-9">
+            {{ if .Product.ImageUrl }} {{ .Product.ImageUrl }} {{ else }} - {{ end }}
+        </dd>
+    </dl>
+
+    <div class="d-flex align-items-center justify-content-between w-100">
+        <div class="d-flex align-items-center justify-content-start gap-2">
+            <a href="/products/{{ .Product.Id }}/edit?back=product" role="button" class="btn btn-warning flex-end">Edit</a>
+            <a href="/products/{{ .Product.Id }}/delete?back=product" role="button" class="btn btn-danger flex-end">Delete</a>
+        </div>
+
+        <a href="#" role="button" class="btn btn-primary flex-end">Add characteristic</a>
+    </div>
+
+    <table class="table mt-2">
+        <thead>
+        <tr>
+            <th scope="col">Id</th>
+            <th scope="col">Name</th>
+            <th scope="col">Value</th>
+            <th scope="col">Measurement Unit</th>
+            <th scope="col">Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        {{ range .Characteristics }}
+            <tr>
+                <td scope="row">{{ .Id }}</td>
+                <td>{{ .Characteristic.Name }}</td>
+                <td>{{ .Value }}</td>
+                <td>{{ .Characteristic.Unit }}</td>
+                <td>
+                    <a role="button" class="btn btn-danger" href="/products/{{.ProductId}}/characteristics/{{.Id}}/delete">Delete</a>
+                </td>
+            </tr>
+        {{ end }}
+        </tbody>
+    </table>
+{{end}}

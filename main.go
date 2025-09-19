@@ -31,6 +31,7 @@ func main() {
 	http.HandleFunc("/products/create", productCreateHandler)
 	http.HandleFunc("/products/{productId}/edit", productEditHandler)
 	http.HandleFunc("/products/{productId}/delete", productDeleteHandler)
+	http.HandleFunc("/products/{productId}", productPageHandler)
 
 	http.HandleFunc("/categories", categoriesListHandler)
 	http.HandleFunc("/categories/create", categoryCreateHandler)

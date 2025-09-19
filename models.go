@@ -26,10 +26,10 @@ type Characteristic struct {
 }
 
 type ProductCharacteristic struct {
-	Id               int64
-	ProductId        int64
-	CharacteristicId int64
-	Value            string
+	Id             int64
+	ProductId      int64
+	Characteristic Characteristic
+	Value          string
 }
 
 type Customer struct {
