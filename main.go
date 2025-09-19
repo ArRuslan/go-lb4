@@ -32,6 +32,8 @@ func main() {
 	http.HandleFunc("/products/{productId}/edit", productEditHandler)
 	http.HandleFunc("/products/{productId}/delete", productDeleteHandler)
 	http.HandleFunc("/products/{productId}", productPageHandler)
+	http.HandleFunc("/products/{productId}/characteristics", productAddCharacteristicHandler)
+	http.HandleFunc("/products/{productId}/characteristics/{characteristicId}/delete", productDeleteCharacteristicHandler)
 
 	http.HandleFunc("/categories", categoriesListHandler)
 	http.HandleFunc("/categories/create", categoryCreateHandler)
@@ -43,6 +45,7 @@ func main() {
 	http.HandleFunc("/characteristics/create", characteristicCreateHandler)
 	http.HandleFunc("/characteristics/{characteristicId}/edit", characteristicEditHandler)
 	http.HandleFunc("/characteristics/{characteristicId}/delete", characteristicDeleteHandler)
+	http.HandleFunc("/characteristics/search", characteristicsSearchHandler)
 
 	http.HandleFunc("/customers", customersListHandler)
 	http.HandleFunc("/customers/create", customerCreateHandler)

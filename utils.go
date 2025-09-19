@@ -30,7 +30,9 @@ func getFormStringNonEmpty(req *http.Request, name string, errorText *string, va
 	}
 
 	if value == "" {
-		*errorText += fmt.Sprintf("\"%s\" is empty or invalid. ", name)
+		if errorText != nil {
+			*errorText += fmt.Sprintf("\"%s\" is empty or invalid. ", name)
+		}
 		*valid = false
 
 		return value
@@ -58,7 +60,9 @@ func getFormInt(req *http.Request, name string, errorText *string, valid *bool, 
 
 	valueInt, err := strconv.Atoi(value)
 	if err != nil {
-		*errorText += fmt.Sprintf("\"%s\" is empty or invalid. ", name)
+		if errorText != nil {
+			*errorText += fmt.Sprintf("\"%s\" is empty or invalid. ", name)
+		}
 		*valid = false
 
 		return 0
@@ -76,7 +80,9 @@ func getFormInt64(req *http.Request, name string, errorText *string, valid *bool
 
 	valueInt, err := strconv.ParseInt(value, 10, 64)
 	if err != nil {
-		*errorText += fmt.Sprintf("\"%s\" is empty or invalid. ", name)
+		if errorText != nil {
+			*errorText += fmt.Sprintf("\"%s\" is empty or invalid. ", name)
+		}
 		*valid = false
 
 		return 0
@@ -94,7 +100,9 @@ func getFormDouble(req *http.Request, name string, errorText *string, valid *boo
 
 	valueDouble, err := strconv.ParseFloat(value, 64)
 	if err != nil {
-		*errorText += fmt.Sprintf("\"%s\" is empty or invalid. ", name)
+		if errorText != nil {
+			*errorText += fmt.Sprintf("\"%s\" is empty or invalid. ", name)
+		}
 		*valid = false
 
 		return 0

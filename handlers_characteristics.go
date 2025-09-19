@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"html/template"
@@ -25,6 +26,25 @@ func characteristicsListHandler(w http.ResponseWriter, r *http.Request) {
 	})
 	if err != nil {
 		log.Println(err)
+	}
+}
+
+func characteristicsSearchHandler(w http.ResponseWriter, r *http.Request) {
+	var characteristics []Characteristic
+
+	namePart := r.URL.Query().Get("name")
+	if namePart != "" {
+		_, pageSize := getPageAndSize(r)
+		characteristics, _ = searchCharacteristics(namePart, pageSize)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+
+	if len(characteristics) > 0 {
+		characteristicsJson, _ := json.Marshal(characteristics)
+		w.Write(characteristicsJson)
+	} else {
+		w.Write([]byte("[]"))
 	}
 }
 
@@ -72,7 +92,7 @@ type EditCharacteristicTmplContext struct {
 
 func characteristicEditHandler(w http.ResponseWriter, r *http.Request) {
 	characteristicIdStr := r.PathValue("characteristicId")
-	characteristicId, err := strconv.Atoi(characteristicIdStr)
+	characteristicId, err := strconv.ParseInt(characteristicIdStr, 10, 64)
 	if err != nil {
 		http.Redirect(w, r, "/characteristics", 301)
 		return
@@ -128,7 +148,7 @@ type CharacteristicTmplContext struct {
 
 func characteristicDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	characteristicIdStr := r.PathValue("characteristicId")
-	characteristicId, err := strconv.Atoi(characteristicIdStr)
+	characteristicId, err := strconv.ParseInt(characteristicIdStr, 10, 64)
 	if err != nil {
 		http.Redirect(w, r, "/characteristics", 301)
 		return

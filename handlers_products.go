@@ -265,3 +265,116 @@ func productPageHandler(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 	}
 }
+
+func productAddCharacteristicHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		w.WriteHeader(405)
+		w.Write([]byte("Method is not allowed!"))
+		return
+	}
+
+	productIdStr := r.PathValue("productId")
+	productId, err := strconv.Atoi(productIdStr)
+	if err != nil {
+		http.Redirect(w, r, "/products", 301)
+		return
+	}
+
+	allGood := true
+	charId := getFormInt64(r, "characteristic_id", nil, &allGood, nil)
+	charValue := getFormStringNonEmpty(r, "value", nil, &allGood, nil)
+
+	if !allGood {
+		http.Redirect(w, r, "/products/"+productIdStr, 301)
+		return
+	}
+
+	product, err := getProduct(productId)
+	if errors.Is(err, sql.ErrNoRows) {
+		w.WriteHeader(404)
+		w.Write([]byte("Unknown product!"))
+		return
+	}
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(500)
+		w.Write([]byte("Database error occurred!"))
+		return
+	}
+
+	var characteristic Characteristic
+	characteristic, err = getCharacteristic(charId)
+	if errors.Is(err, sql.ErrNoRows) {
+		w.WriteHeader(404)
+		w.Write([]byte("Unknown characteristic!"))
+		return
+	}
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(500)
+		w.Write([]byte("Database error occurred!"))
+		return
+	}
+
+	productChar := ProductCharacteristic{
+		Id:             0,
+		ProductId:      product.Id,
+		Characteristic: characteristic,
+		Value:          charValue,
+	}
+
+	err = productChar.dbSave()
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(500)
+		w.Write([]byte("Database error occurred!"))
+		return
+	}
+
+	http.Redirect(w, r, "/products/"+productIdStr, 301)
+}
+
+func productDeleteCharacteristicHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		w.WriteHeader(405)
+		w.Write([]byte("Method is not allowed!"))
+		return
+	}
+
+	productIdStr := r.PathValue("productId")
+	productId, err := strconv.Atoi(productIdStr)
+	if err != nil {
+		http.Redirect(w, r, "/products", 301)
+		return
+	}
+
+	characteristicIdStr := r.PathValue("characteristicId")
+	characteristicId, err := strconv.Atoi(characteristicIdStr)
+	if err != nil {
+		http.Redirect(w, r, "/products/"+productIdStr, 301)
+		return
+	}
+
+	characteristic, err := getProductCharacteristic(characteristicId, productId)
+	if errors.Is(err, sql.ErrNoRows) {
+		w.WriteHeader(404)
+		w.Write([]byte("Unknown characteristic!"))
+		return
+	}
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(500)
+		w.Write([]byte("Database error occurred!"))
+		return
+	}
+
+	err = characteristic.dbDelete()
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(500)
+		w.Write([]byte("Database error occurred!"))
+		return
+	}
+
+	http.Redirect(w, r, "/products/"+productIdStr, 301)
+}

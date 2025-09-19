@@ -41,31 +41,67 @@
             <a href="/products/{{ .Product.Id }}/delete?back=product" role="button" class="btn btn-danger flex-end">Delete</a>
         </div>
 
-        <a href="#" role="button" class="btn btn-primary flex-end">Add characteristic</a>
+        <form action="/products/{{ .Product.Id }}/characteristics" method="POST" class="row mt-3 w-50">
+            <div class="col">
+                <input type="hidden" name="characteristic_id" id="input-char_id">
+                <input type="text" class="form-control" placeholder="Characteristic" id="input-char_name">
+            </div>
+            <div class="col">
+                <input type="text" class="form-control" placeholder="Value" name="value">
+            </div>
+            <div class="col">
+                <button role="submit" class="btn btn-primary w-100">Add characteristic</button>
+            </div>
+        </form>
     </div>
 
-    <table class="table mt-2">
-        <thead>
-        <tr>
-            <th scope="col">Id</th>
-            <th scope="col">Name</th>
-            <th scope="col">Value</th>
-            <th scope="col">Measurement Unit</th>
-            <th scope="col">Actions</th>
-        </tr>
-        </thead>
-        <tbody>
-        {{ range .Characteristics }}
+
+    {{ if .Characteristics }}
+        <table class="table mt-2">
+            <thead>
             <tr>
-                <td scope="row">{{ .Id }}</td>
-                <td>{{ .Characteristic.Name }}</td>
-                <td>{{ .Value }}</td>
-                <td>{{ .Characteristic.Unit }}</td>
-                <td>
-                    <a role="button" class="btn btn-danger" href="/products/{{.ProductId}}/characteristics/{{.Id}}/delete">Delete</a>
-                </td>
+                <th scope="col">Id</th>
+                <th scope="col">Name</th>
+                <th scope="col">Value</th>
+                <th scope="col">Measurement Unit</th>
+                <th scope="col">Actions</th>
             </tr>
-        {{ end }}
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+            {{ range .Characteristics }}
+                <tr class="align-middle">
+                    <td scope="row">{{ .Id }}</td>
+                    <td>{{ .Characteristic.Name }}</td>
+                    <td>{{ .Value }}</td>
+                    <td>{{ .Characteristic.Unit }}</td>
+                    <td>
+                        <form action="/products/{{ .ProductId }}/characteristics/{{ .Id }}/delete" method="POST">
+                            <button role="submit" class="btn btn-danger">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+            {{ end }}
+            </tbody>
+        </table>
+    {{ end }}
+
+    <script>
+        $("#input-char_name").autoComplete({
+            bootstrapVersion: "5",
+            minLength: 1,
+            preventEnter: true,
+            resolver: "ajax",
+            resolverSettings: {
+                url: "/characteristics/search",
+                queryKey: "name",
+            },
+            formatResult: (item) => {
+                return {id: item.Id, text: item.Name};
+            },
+        });
+
+        $("#input-char_name").on("autocomplete.select", (evt, item) => {
+            $("#input-char_id").val(item.Id)
+        });
+    </script>
 {{end}}

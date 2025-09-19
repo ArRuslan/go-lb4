@@ -282,6 +282,35 @@ func getCharacteristics(page, pageSize int) ([]Characteristic, int, error) {
 	)
 }
 
+func searchCharacteristics(namePart string, limit int) ([]Characteristic, error) {
+	characteristics, _, err := getRowsAndCount(
+		1,
+		limit,
+		func(page, pageSize int) (*sql.Rows, error) {
+			return database.Query(
+				`SELECT 
+    				c.id, c.name, COALESCE(c.measurement_unit, '')
+				FROM characteristics c
+				WHERE LOWER(c.name) LIKE ?
+				ORDER BY c.id LIMIT ?;`,
+				"%"+strings.ToLower(namePart)+"%", pageSize,
+			)
+		},
+		func(rows *sql.Rows) (Characteristic, error) {
+			characteristic := Characteristic{}
+			err := rows.Scan(
+				&characteristic.Id, &characteristic.Name, &characteristic.Unit,
+			)
+			return characteristic, err
+		},
+		func() *sql.Row {
+			return database.QueryRow("SELECT 0;")
+		},
+	)
+
+	return characteristics, err
+}
+
 func createCharacteristic(characteristic Characteristic) error {
 	var unit sql.NullString
 	if characteristic.Unit == "" {
@@ -297,7 +326,7 @@ func createCharacteristic(characteristic Characteristic) error {
 	return err
 }
 
-func getCharacteristic(characteristicId int) (Characteristic, error) {
+func getCharacteristic(characteristicId int64) (Characteristic, error) {
 	var characteristic Characteristic
 
 	row := database.QueryRow(
@@ -579,6 +608,26 @@ func getProductCharacteristics(productId int64) ([]ProductCharacteristic, int, e
 			return database.QueryRow("SELECT COUNT(*) FROM `product_characteristics` WHERE product_id=?;", productId)
 		},
 	)
+}
+
+func getProductCharacteristic(characteristicId, productId int) (ProductCharacteristic, error) {
+	var char ProductCharacteristic
+
+	row := database.QueryRow(
+		`SELECT 
+    		p.id, p.product_id, p.value,
+    		c.id, c.name, COALESCE(c.measurement_unit, '')
+		FROM product_characteristics p 
+		LEFT OUTER JOIN characteristics c ON p.characteristic_id = c.id
+		WHERE p.id = ? AND p.product_id = ?;`,
+		characteristicId, productId,
+	)
+	err := row.Scan(
+		&char.Id, &char.ProductId, &char.Value,
+		&char.Characteristic.Id, &char.Characteristic.Name, &char.Characteristic.Unit,
+	)
+
+	return char, err
 }
 
 func createProductCharacteristic(char ProductCharacteristic) error {
