@@ -105,16 +105,24 @@ type EditOrderTmplContext struct {
 	CustomerLastNameReadonly  string
 	Address                   string
 
-	Error string
+	BackLocation string
+	Error        string
 }
 
 func orderEditHandler(w http.ResponseWriter, r *http.Request) {
+	backLocation := r.URL.Query().Get("back")
 	orderIdStr := r.PathValue("orderId")
 	orderId, err := strconv.Atoi(orderIdStr)
 	if err != nil {
 		log.Println(err)
 		http.Redirect(w, r, "/orders", 301)
 		return
+	}
+
+	if backLocation == "order" {
+		backLocation = "/orders/" + orderIdStr
+	} else {
+		backLocation = "/orders"
 	}
 
 	order, err := getOrder(orderId)
@@ -138,6 +146,7 @@ func orderEditHandler(w http.ResponseWriter, r *http.Request) {
 		CustomerFirstNameReadonly: order.Customer.FirstName,
 		CustomerLastNameReadonly:  order.Customer.LastName,
 		Address:                   order.Address,
+		BackLocation:              backLocation,
 	}
 
 	if r.Method == "POST" {
@@ -148,7 +157,7 @@ func orderEditHandler(w http.ResponseWriter, r *http.Request) {
 		if allGood {
 			err = order.dbSave()
 			if err == nil {
-				http.Redirect(w, r, "/orders", 301)
+				http.Redirect(w, r, backLocation, 301)
 				return
 			}
 
@@ -167,17 +176,25 @@ func orderEditHandler(w http.ResponseWriter, r *http.Request) {
 type OrderTmplContext struct {
 	BaseTmplContext
 
-	Order Order
-	Error string
+	Order        Order
+	BackLocation string
+	Error        string
 }
 
 func orderDeleteHandler(w http.ResponseWriter, r *http.Request) {
+	backLocation := r.URL.Query().Get("back")
 	orderIdStr := r.PathValue("orderId")
 	orderId, err := strconv.Atoi(orderIdStr)
 	if err != nil {
 		log.Println(err)
 		http.Redirect(w, r, "/orders", 301)
 		return
+	}
+
+	if backLocation == "order" {
+		backLocation = "/orders/" + orderIdStr
+	} else {
+		backLocation = "/orders"
 	}
 
 	order, err := getOrder(orderId)
@@ -197,14 +214,15 @@ func orderDeleteHandler(w http.ResponseWriter, r *http.Request) {
 		BaseTmplContext: BaseTmplContext{
 			Type: "orders",
 		},
-		Order: order,
-		Error: "",
+		Order:        order,
+		BackLocation: backLocation,
+		Error:        "",
 	}
 
 	if r.Method == "POST" {
 		err = order.dbDelete()
 		if err == nil {
-			http.Redirect(w, r, "/orders", 301)
+			http.Redirect(w, r, backLocation, 301)
 			return
 		}
 
@@ -213,6 +231,58 @@ func orderDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	tmpl, _ := template.ParseFiles("templates/orders/delete.gohtml", "templates/layout.gohtml")
+	err = tmpl.Execute(w, resp)
+	if err != nil {
+		log.Println(err)
+	}
+}
+
+type OrderWithProductsTmplContext struct {
+	BaseTmplContext
+
+	Order    Order
+	Products []OrderItem
+}
+
+func orderPageHandler(w http.ResponseWriter, r *http.Request) {
+	orderIdStr := r.PathValue("orderId")
+	orderId, err := strconv.Atoi(orderIdStr)
+	if err != nil {
+		http.Redirect(w, r, "/orders", 301)
+		return
+	}
+
+	order, err := getOrder(orderId)
+	if errors.Is(err, sql.ErrNoRows) {
+		w.WriteHeader(404)
+		w.Write([]byte("Unknown order!"))
+		return
+	}
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(500)
+		w.Write([]byte("Database error occurred!"))
+		return
+	}
+
+	var items []OrderItem
+	items, _, err = getOrderItems(order.Id)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(500)
+		w.Write([]byte("Database error occurred!"))
+		return
+	}
+
+	resp := OrderWithProductsTmplContext{
+		BaseTmplContext: BaseTmplContext{
+			Type: "orders",
+		},
+		Order:    order,
+		Products: items,
+	}
+
+	tmpl, _ := template.ParseFiles("templates/orders/order.gohtml", "templates/layout.gohtml")
 	err = tmpl.Execute(w, resp)
 	if err != nil {
 		log.Println(err)

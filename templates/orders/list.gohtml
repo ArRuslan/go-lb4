@@ -24,7 +24,7 @@
         <tbody>
         {{ range .Orders }}
             <tr>
-                <td scope="row">{{ .Id }}</td>
+                <td scope="row"><a href="/orders/{{ .Id }}">{{ .Id }}</a></td>
                 <td>{{ .Customer.FirstName }} {{ .Customer.LastName }}</td>
                 <td>{{ .Customer.Email }}</td>
                 <td>{{ .Address }}</td>

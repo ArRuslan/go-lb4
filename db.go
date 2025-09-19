@@ -74,6 +74,37 @@ func getProducts(page, pageSize int) ([]Product, int, error) {
 	)
 }
 
+func searchProducts(model string, limit int) ([]Product, error) {
+	products, _, err := getRowsAndCount(
+		1,
+		limit,
+		func(page, pageSize int) (*sql.Rows, error) {
+			return database.Query(
+				`SELECT 
+    				p.id, p.model, p.manufacturer, p.price, p.quantity, COALESCE(p.image_url, ''), p.warranty_days,
+    				COALESCE(c.id, 0), COALESCE(c.name, ''), COALESCE(c.description, '')
+				FROM products p 
+				LEFT OUTER JOIN categories c ON p.category_id = c.id
+				WHERE LOWER(p.model) LIKE ?
+				ORDER BY p.id LIMIT ?;`,
+				"%"+model+"%", pageSize,
+			)
+		},
+		func(rows *sql.Rows) (Product, error) {
+			product := Product{}
+			err := rows.Scan(
+				&product.Id, &product.Model, &product.Manufacturer, &product.Price, &product.Quantity, &product.ImageUrl, &product.WarrantyDays,
+				&product.Category.Id, &product.Category.Name, &product.Category.Description,
+			)
+			return product, err
+		},
+		func() *sql.Row {
+			return database.QueryRow("SELECT 0;")
+		},
+	)
+	return products, err
+}
+
 func createProduct(product Product) error {
 	var imageUrl sql.NullString
 	if product.ImageUrl == "" {
@@ -483,7 +514,7 @@ func getOrders(page, pageSize int) ([]Order, int, error) {
 		func(page, pageSize int) (*sql.Rows, error) {
 			return database.Query(
 				`SELECT 
-    				o.id, o.address,
+    				o.id, o.created_at, o.address,
     				COALESCE(c.id, 0), COALESCE(c.first_name, ''), COALESCE(c.last_name, ''), COALESCE(c.email, '')
 				FROM orders o 
 				LEFT OUTER JOIN customers c ON o.customer_id = c.id
@@ -494,7 +525,7 @@ func getOrders(page, pageSize int) ([]Order, int, error) {
 		func(rows *sql.Rows) (Order, error) {
 			order := Order{}
 			err := rows.Scan(
-				&order.Id, &order.Address,
+				&order.Id, &order.CreatedAt, &order.Address,
 				&order.Customer.Id, &order.Customer.FirstName, &order.Customer.LastName, &order.Customer.Email,
 			)
 			return order, err
@@ -539,7 +570,7 @@ func getOrder(orderId int) (Order, error) {
 
 	row := database.QueryRow(
 		`SELECT 
-    		o.id, o.address,
+    		o.id, o.created_at, o.address,
     		COALESCE(c.id, 0), COALESCE(c.first_name, ''), COALESCE(c.last_name, ''), COALESCE(c.email, '')
 		FROM orders o 
 		LEFT OUTER JOIN customers c ON o.customer_id = c.id
@@ -547,7 +578,7 @@ func getOrder(orderId int) (Order, error) {
 		orderId,
 	)
 	err := row.Scan(
-		&order.Id, &order.Address,
+		&order.Id, &order.CreatedAt, &order.Address,
 		&order.Customer.Id, &order.Customer.FirstName, &order.Customer.LastName, &order.Customer.Email,
 	)
 
@@ -583,7 +614,7 @@ func (order *Order) dbDelete() error {
 func getProductCharacteristics(productId int64) ([]ProductCharacteristic, int, error) {
 	return getRowsAndCount(
 		1,
-		2,
+		0,
 		func(page, pageSize int) (*sql.Rows, error) {
 			return database.Query(
 				`SELECT 
@@ -655,5 +686,81 @@ func (char *ProductCharacteristic) dbSave() error {
 
 func (char *ProductCharacteristic) dbDelete() error {
 	_, err := database.Exec("DELETE FROM `product_characteristics` WHERE `id`=?;", char.Id)
+	return err
+}
+
+func getOrderItems(orderId int64) ([]OrderItem, int, error) {
+	return getRowsAndCount(
+		1,
+		0,
+		func(page, pageSize int) (*sql.Rows, error) {
+			return database.Query(
+				`SELECT 
+    				i.id, i.order_id, i.quantity, i.price_per_item,
+    				p.id, p.model, p.manufacturer, p.price, p.quantity, p.warranty_days, COALESCE(p.image_url, '')
+				FROM order_items i 
+				LEFT OUTER JOIN products p ON i.product_id = p.id
+				WHERE i.order_id = ?
+				ORDER BY i.id;`,
+				orderId,
+			)
+		},
+		func(rows *sql.Rows) (OrderItem, error) {
+			item := OrderItem{}
+			err := rows.Scan(
+				&item.Id, &item.OrderId, &item.Quantity, &item.PricePerItem,
+				&item.Product.Id, &item.Product.Model, &item.Product.Manufacturer, &item.Product.Price, &item.Product.Quantity, &item.Product.WarrantyDays, &item.Product.ImageUrl,
+			)
+			return item, err
+		},
+		func() *sql.Row {
+			return database.QueryRow("SELECT COUNT(*) FROM `order_items` WHERE order_id=?;", orderId)
+		},
+	)
+}
+
+func getOrderItem(itemId, orderId int) (OrderItem, error) {
+	var item OrderItem
+
+	row := database.QueryRow(
+		`SELECT 
+    		i.id, i.order_id, i.quantity, i.price_per_item,
+    		p.id, p.model, p.manufacturer, p.price, p.quantity, p.warranty_days, COALESCE(p.image_url, '')
+		FROM order_items i
+		LEFT OUTER JOIN products p ON i.product_id = p.id
+		WHERE i.id = ? AND o.order_id = ?;`,
+		itemId, orderId,
+	)
+	err := row.Scan(
+		&item.Id, &item.OrderId, &item.Quantity, &item.PricePerItem,
+		&item.Product.Id, &item.Product.Model, &item.Product.Manufacturer, &item.Product.Price, &item.Product.Quantity, &item.Product.WarrantyDays, &item.Product.ImageUrl,
+	)
+
+	return item, err
+}
+
+func createOrderItem(item OrderItem) error {
+	_, err := database.Exec(
+		`INSERT INTO order_items (order_id, product_id, quantity, price_per_item) 
+		VALUES (?, ?, ?, ?);`,
+		item.OrderId, item.Product.Id, item.Quantity, item.PricePerItem,
+	)
+	return err
+}
+
+func (item *OrderItem) dbSave() error {
+	if item.Id > 0 {
+		_, err := database.Exec(
+			`UPDATE order_items SET quantity=? WHERE id=?;`,
+			item.Quantity, item.Id,
+		)
+		return err
+	}
+
+	return createOrderItem(*item)
+}
+
+func (item *OrderItem) dbDelete() error {
+	_, err := database.Exec("DELETE FROM `order_items` WHERE `id`=?;", item.Id)
 	return err
 }

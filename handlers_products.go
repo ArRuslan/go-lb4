@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"html/template"
@@ -30,6 +31,25 @@ func productsListHandler(w http.ResponseWriter, r *http.Request) {
 	})
 	if err != nil {
 		log.Println(err)
+	}
+}
+
+func productsSearchHandler(w http.ResponseWriter, r *http.Request) {
+	var products []Product
+
+	namePart := r.URL.Query().Get("model")
+	if namePart != "" {
+		_, pageSize := getPageAndSize(r)
+		products, _ = searchProducts(namePart, pageSize)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+
+	if len(products) > 0 {
+		productsJson, _ := json.Marshal(products)
+		w.Write(productsJson)
+	} else {
+		w.Write([]byte("[]"))
 	}
 }
 
@@ -243,7 +263,6 @@ type ProductWithCharacteristicsTmplContext struct {
 
 	Product         Product
 	Characteristics []ProductCharacteristic
-	Error           string
 }
 
 func productPageHandler(w http.ResponseWriter, r *http.Request) {
@@ -282,7 +301,6 @@ func productPageHandler(w http.ResponseWriter, r *http.Request) {
 		},
 		Product:         product,
 		Characteristics: characteristics,
-		Error:           "",
 	}
 
 	tmpl, _ := template.ParseFiles("templates/products/product.gohtml", "templates/layout.gohtml")

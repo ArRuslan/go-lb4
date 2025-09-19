@@ -19,7 +19,7 @@ type BaseTmplContext struct {
 Можна створювати БД за індивідуальним завданням, або взяти будь-яку свою БД, яка вже була створена на іншій дисципліні (курсовій роботі)
 */
 func main() {
-	db, err := sql.Open("mysql", "nure_golang_pz3:123456789@tcp(127.0.0.1:3306)/nure_golang_pz3")
+	db, err := sql.Open("mysql", "nure_golang_pz3:123456789@tcp(127.0.0.1:3306)/nure_golang_pz3?parseTime=true")
 	if err != nil {
 		panic(err)
 	}
@@ -33,6 +33,7 @@ func main() {
 
 	http.HandleFunc("/products", productsListHandler)
 	http.HandleFunc("/products/create", productCreateHandler)
+	http.HandleFunc("/products/search", productsSearchHandler)
 	http.HandleFunc("/products/{productId}/edit", productEditHandler)
 	http.HandleFunc("/products/{productId}/delete", productDeleteHandler)
 	http.HandleFunc("/products/{productId}", productPageHandler)
@@ -61,6 +62,7 @@ func main() {
 	http.HandleFunc("/orders/create", orderCreateHandler)
 	http.HandleFunc("/orders/{orderId}/edit", orderEditHandler)
 	http.HandleFunc("/orders/{orderId}/delete", orderDeleteHandler)
+	http.HandleFunc("/orders/{orderId}", orderPageHandler)
 
 	fmt.Println("Server is listening on port 8081")
 	err = http.ListenAndServe("127.0.0.1:8081", nil)

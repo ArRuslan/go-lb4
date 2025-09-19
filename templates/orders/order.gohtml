@@ -1,0 +1,95 @@
+{{- /*gotype: go-pz3.OrderWithProductsTmplContext*/ -}}
+
+{{template "layout.gohtml" .}}
+
+{{define "title"}}GoLang Pz3 - Order "{{ .Order.Id }}"{{end}}
+
+{{define "content"}}
+    <dl class="row">
+        <dt class="col-sm-3">Id</dt>
+        <dd class="col-sm-9">{{ .Order.Id }}</dd>
+
+        <dt class="col-sm-3">Customer Name</dt>
+        <dd class="col-sm-9">{{ .Order.Customer.FirstName }} {{ .Order.Customer.LastName }}</dd>
+
+        <dt class="col-sm-3">Customer Email</dt>
+        <dd class="col-sm-9">{{ .Order.Customer.Email }}</dd>
+
+        <dt class="col-sm-3">Created At</dt>
+        <dd class="col-sm-9">{{ .Order.CreatedAt }}</dd>
+
+        <dt class="col-sm-3">Address</dt>
+        <dd class="col-sm-9">{{ .Order.Address }}</dd>
+    </dl>
+
+    <div class="d-flex align-items-center justify-content-between w-100">
+        <div class="d-flex align-items-center justify-content-start gap-2">
+            <a href="/orders/{{ .Order.Id }}/edit?back=order" role="button" class="btn btn-warning flex-end">Edit</a>
+            <a href="/orders/{{ .Order.Id }}/delete?back=order" role="button" class="btn btn-danger flex-end">Delete</a>
+        </div>
+
+        <form action="/orders/{{ .Order.Id }}/products" method="POST" class="row mt-3">
+            <div class="col">
+                <input type="hidden" name="product_id" id="input-product_id">
+                <input type="text" class="form-control" placeholder="Product Model" id="input-product_model">
+            </div>
+            <div class="col">
+                <input type="number" class="form-control" placeholder="Quantity" name="quantity">
+            </div>
+            <div class="col">
+                <button role="submit" class="btn btn-primary w-100">Add product</button>
+            </div>
+        </form>
+    </div>
+
+    {{ if .Products }}
+        <table class="table mt-2">
+            <thead>
+            <tr>
+                <th scope="col">Id</th>
+                <th scope="col">Model</th>
+                <th scope="col">Manufacturer</th>
+                <th scope="col">Quantity</th>
+                <th scope="col">Price Per Item</th>
+                <th scope="col">Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            {{ range .Products }}
+                <tr class="align-middle">
+                    <td scope="row">{{ .Product.Id }}</td>
+                    <td>{{ .Product.Model }}</td>
+                    <td>{{ .Product.Manufacturer }}</td>
+                    <td>{{ .Quantity }}</td>
+                    <td>{{ .PricePerItem }}</td>
+                    <td>
+                        <form action="/orders/{{ .OrderId }}/products/{{ .Id }}/delete" method="POST">
+                            <button role="submit" class="btn btn-danger">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+            {{ end }}
+            </tbody>
+        </table>
+    {{ end }}
+
+    <script>
+        $("#input-product_model").autoComplete({
+            bootstrapVersion: "5",
+            minLength: 1,
+            preventEnter: true,
+            resolver: "ajax",
+            resolverSettings: {
+                url: "/products/search",
+                queryKey: "model",
+            },
+            formatResult: (item) => {
+                return {id: item.Id, text: item.Model};
+            },
+        });
+
+        $("#input-product_model").on("autocomplete.select", (evt, item) => {
+            $("#input-product_id").val(item.Id)
+        });
+    </script>
+{{end}}
