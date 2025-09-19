@@ -123,7 +123,7 @@ type EditProductTmplContext struct {
 func productEditHandler(w http.ResponseWriter, r *http.Request) {
 	backLocation := r.URL.Query().Get("back")
 	productIdStr := r.PathValue("productId")
-	productId, err := strconv.Atoi(productIdStr)
+	productId, err := strconv.ParseInt(productIdStr, 10, 64)
 	if err != nil {
 		http.Redirect(w, r, "/products", 301)
 		return
@@ -206,7 +206,7 @@ func productDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	backLocation := r.URL.Query().Get("back")
 
 	productIdStr := r.PathValue("productId")
-	productId, err := strconv.Atoi(productIdStr)
+	productId, err := strconv.ParseInt(productIdStr, 10, 64)
 	if err != nil {
 		http.Redirect(w, r, "/products", 301)
 		return
@@ -267,7 +267,7 @@ type ProductWithCharacteristicsTmplContext struct {
 
 func productPageHandler(w http.ResponseWriter, r *http.Request) {
 	productIdStr := r.PathValue("productId")
-	productId, err := strconv.Atoi(productIdStr)
+	productId, err := strconv.ParseInt(productIdStr, 10, 64)
 	if err != nil {
 		http.Redirect(w, r, "/products", 301)
 		return
@@ -318,7 +318,7 @@ func productAddCharacteristicHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	productIdStr := r.PathValue("productId")
-	productId, err := strconv.Atoi(productIdStr)
+	productId, err := strconv.ParseInt(productIdStr, 10, 64)
 	if err != nil {
 		http.Redirect(w, r, "/products", 301)
 		return

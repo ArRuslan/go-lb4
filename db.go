@@ -128,7 +128,7 @@ func createProduct(product Product) error {
 	return err
 }
 
-func getProduct(productId int) (Product, error) {
+func getProduct(productId int64) (Product, error) {
 	var product Product
 
 	row := database.QueryRow(
@@ -728,7 +728,7 @@ func getOrderItem(itemId, orderId int) (OrderItem, error) {
     		p.id, p.model, p.manufacturer, p.price, p.quantity, p.warranty_days, COALESCE(p.image_url, '')
 		FROM order_items i
 		LEFT OUTER JOIN products p ON i.product_id = p.id
-		WHERE i.id = ? AND o.order_id = ?;`,
+		WHERE i.id = ? AND i.order_id = ?;`,
 		itemId, orderId,
 	)
 	err := row.Scan(

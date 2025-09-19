@@ -288,3 +288,144 @@ func orderPageHandler(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 	}
 }
+
+func orderAddProductHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		w.WriteHeader(405)
+		w.Write([]byte("Method is not allowed!"))
+		return
+	}
+
+	orderIdStr := r.PathValue("orderId")
+	orderId, err := strconv.Atoi(orderIdStr)
+	if err != nil {
+		http.Redirect(w, r, "/orders", 301)
+		return
+	}
+
+	allGood := true
+	prodId := getFormInt64(r, "product_id", nil, &allGood, nil)
+	prodQuantity := getFormInt(r, "quantity", nil, &allGood, nil)
+
+	if !allGood {
+		http.Redirect(w, r, "/orders/"+orderIdStr, 301)
+		return
+	}
+
+	var order Order
+	order, err = getOrder(orderId)
+	if errors.Is(err, sql.ErrNoRows) {
+		w.WriteHeader(404)
+		w.Write([]byte("Unknown order!"))
+		return
+	}
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(500)
+		w.Write([]byte("Database error occurred!"))
+		return
+	}
+
+	product, err := getProduct(prodId)
+	if errors.Is(err, sql.ErrNoRows) {
+		w.WriteHeader(404)
+		w.Write([]byte("Unknown product!"))
+		return
+	}
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(500)
+		w.Write([]byte("Database error occurred!"))
+		return
+	}
+
+	if prodQuantity <= 0 || prodQuantity > product.Quantity {
+		http.Redirect(w, r, "/orders/"+orderIdStr, 301)
+		return
+	}
+
+	orderItem := OrderItem{
+		Id:           0,
+		OrderId:      order.Id,
+		Product:      product,
+		Quantity:     prodQuantity,
+		PricePerItem: product.Price,
+	}
+
+	product.Quantity -= prodQuantity
+	err = product.dbSave()
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(500)
+		w.Write([]byte("Database error occurred!"))
+		return
+	}
+
+	err = orderItem.dbSave()
+	if err != nil {
+		product.Quantity += prodQuantity
+		err = product.dbSave()
+
+		log.Println(err)
+		w.WriteHeader(500)
+		w.Write([]byte("Database error occurred!"))
+		return
+	}
+
+	http.Redirect(w, r, "/orders/"+orderIdStr, 301)
+}
+
+func orderDeleteProductHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		w.WriteHeader(405)
+		w.Write([]byte("Method is not allowed!"))
+		return
+	}
+
+	orderIdStr := r.PathValue("orderId")
+	orderId, err := strconv.Atoi(orderIdStr)
+	if err != nil {
+		http.Redirect(w, r, "/orders", 301)
+		return
+	}
+
+	itemIdStr := r.PathValue("itemId")
+	itemId, err := strconv.Atoi(itemIdStr)
+	if err != nil {
+		http.Redirect(w, r, "/orders/"+orderIdStr, 301)
+		return
+	}
+
+	item, err := getOrderItem(itemId, orderId)
+	if errors.Is(err, sql.ErrNoRows) {
+		w.WriteHeader(404)
+		w.Write([]byte("Unknown order item!"))
+		return
+	}
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(500)
+		w.Write([]byte("Database error occurred!"))
+		return
+	}
+
+	err = item.dbDelete()
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(500)
+		w.Write([]byte("Database error occurred!"))
+		return
+	}
+
+	product := item.Product
+	product.Quantity += item.Quantity
+	err = product.dbSave()
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(500)
+		w.Write([]byte("Database error occurred!"))
+		return
+	}
+
+	http.Redirect(w, r, "/orders/"+orderIdStr, 301)
+}
