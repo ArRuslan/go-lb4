@@ -1,7 +1,7 @@
 {{- /*gotype: go-pz3.PaginationInfo*/ -}}
 
 <nav>
-    <ul class="pagination">
+    <ul class="pagination mb-0">
         {{ $active := "" }}
         {{ $pagination := (calculatePagination .)}}
         <li class="page-item"><a class="page-link {{$pagination.PrevDisabled}}" href="{{$pagination.UrlPath}}?page={{$pagination.PrevPage}}&pageSize={{.PageSize}}" {{$pagination.PrevDisabled}}>Previous</a></li>

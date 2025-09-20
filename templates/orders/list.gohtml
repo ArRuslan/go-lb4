@@ -3,7 +3,8 @@
 {{define "title"}}GoLang Pz3 - Orders{{end}}
 
 {{define "content"}}
-    <div class="d-flex align-items-center justify-content-end w-100">
+    <div class="d-flex align-items-center justify-content-between w-100">
+        {{ template "pagination.gohtml" .Pagination }}
         <a href="/orders/create" role="button" class="btn btn-primary flex-end">Add order</a>
     </div>
 
@@ -34,6 +35,4 @@
         {{ end }}
         </tbody>
     </table>
-
-    {{ template "pagination.gohtml" .Pagination }}
 {{end}}
