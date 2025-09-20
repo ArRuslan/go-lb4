@@ -77,6 +77,17 @@
                             Orders
                         </a>
                     </li>
+                    <li>
+                        <a href="/analysis"
+                        {{ if eq .Type "analysis" }}
+                            class="nav-link active" aria-current="page"
+                        {{ else }}
+                            class="nav-link link-dark"
+                        {{ end }}
+                        >
+                            Analysis
+                        </a>
+                    </li>
                 </ul>
             </div>
         </div>

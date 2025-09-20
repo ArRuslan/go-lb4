@@ -1,0 +1,48 @@
+{{- /*gotype: go-pz3.ProductsAnalysisTmplContext*/ -}}
+
+{{template "layout.gohtml" .}}
+
+{{define "title"}}GoLang Pz3 - Products analysis{{end}}
+
+{{define "most_least_ordered_product"}}
+    {{- /*gotype: go-pz3.ProductWithCount*/ -}}
+    <dl class="row">
+        <dt class="col-sm-3">Times ordered</dt>
+        <dd class="col-sm-9">{{ .Count }}</dd>
+
+        <dt class="col-sm-3">Id</dt>
+        <dd class="col-sm-9">{{ .Product.Id }}</dd>
+
+        <dt class="col-sm-3">Category</dt>
+        <dd class="col-sm-9">
+            {{ if .Product.Category.Name }} {{ .Product.Category.Name }} {{ else }} - {{ end }}
+        </dd>
+
+        <dt class="col-sm-3">Model</dt>
+        <dd class="col-sm-9">{{ .Product.Model }}</dd>
+
+        <dt class="col-sm-3">Manufacturer</dt>
+        <dd class="col-sm-9">{{ .Product.Manufacturer }}</dd>
+
+        <dt class="col-sm-3">Price</dt>
+        <dd class="col-sm-9">{{ .Product.Price }}</dd>
+
+        <dt class="col-sm-3">Warranty Days</dt>
+        <dd class="col-sm-9">{{ .Product.WarrantyDays }}</dd>
+    </dl>
+{{end}}
+
+{{define "content"}}
+    <div class="row">
+        <div class="col">
+            <h3>Most ordered product</h3>
+            {{template "most_least_ordered_product" .MostOrdered}}
+        </div>
+        <div class="col">
+            <h3>Least ordered product</h3>
+            {{template "most_least_ordered_product" .LeastOrdered}}
+        </div>
+    </div>
+
+    <h3>Average order total: {{ .AverageOrderTotal }}</h3>
+{{end}}

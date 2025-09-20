@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 )
@@ -109,4 +110,15 @@ func getFormDouble(req *http.Request, name string, errorText *string, valid *boo
 	}
 
 	return valueDouble
+}
+
+func returnOnDatabaseError(err error, w http.ResponseWriter) bool {
+	if err == nil {
+		return false
+	}
+
+	log.Println(err)
+	w.WriteHeader(500)
+	w.Write([]byte("Database error occurred!"))
+	return true
 }
