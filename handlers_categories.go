@@ -15,19 +15,31 @@ type CategoriesListTmplContext struct {
 	BaseTmplContext
 
 	Categories []Category
-	Count      int
+	Pagination PaginationInfo
 }
 
 func categoriesListHandler(w http.ResponseWriter, r *http.Request) {
-	categories, count, err := getCategories(getPageAndSize(r))
+	page, pageSize := getPageAndSize(r)
+	categories, count, err := getCategories(page, pageSize)
 
-	tmpl, _ := template.ParseFiles("templates/categories/list.gohtml", "templates/layout.gohtml")
+	tmpl := template.New("list.gohtml")
+	_, err = tmpl.Funcs(tmplPaginationFuncs).ParseFiles("templates/categories/list.gohtml", "templates/layout.gohtml", "templates/pagination.gohtml")
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
 	err = tmpl.Execute(w, CategoriesListTmplContext{
 		BaseTmplContext: BaseTmplContext{
 			Type: "categories",
 		},
 		Categories: categories,
-		Count:      count,
+		Pagination: PaginationInfo{
+			Page:     page,
+			PageSize: pageSize,
+			Count:    count,
+			urlPath:  "/categories",
+		},
 	})
 	if err != nil {
 		log.Println(err)

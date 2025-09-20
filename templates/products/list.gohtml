@@ -9,8 +9,6 @@
 
     {{- /*gotype: go-pz3.ProductsListTmplContext*/ -}}
 
-        {{.Count}}
-
     <table class="table mt-2">
         <thead>
         <tr>
@@ -44,4 +42,6 @@
         {{ end }}
         </tbody>
     </table>
+
+    {{ template "pagination.gohtml" .Pagination }}
 {{end}}

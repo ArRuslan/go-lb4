@@ -20,7 +20,7 @@ func getPageAndSize(req *http.Request) (int, int) {
 		pageSize = 10
 	}
 
-	return page, pageSize
+	return page, min(pageSize, 100)
 }
 
 func getFormStringNonEmpty(req *http.Request, name string, errorText *string, valid *bool, out *string) string {

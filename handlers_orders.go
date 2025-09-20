@@ -2,7 +2,6 @@ package main
 
 import (
 	"database/sql"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"html/template"
@@ -13,42 +12,35 @@ import (
 
 type OrdersListTmplContext struct {
 	BaseTmplContext
-	Orders []Order
-	Count  int
+	Orders     []Order
+	Pagination PaginationInfo
 }
 
 func ordersListHandler(w http.ResponseWriter, r *http.Request) {
-	orders, count, err := getOrders(getPageAndSize(r))
+	page, pageSize := getPageAndSize(r)
+	orders, count, err := getOrders(page, pageSize)
 
-	tmpl, _ := template.ParseFiles("templates/orders/list.gohtml", "templates/layout.gohtml")
+	tmpl := template.New("list.gohtml")
+	_, err = tmpl.Funcs(tmplPaginationFuncs).ParseFiles("templates/orders/list.gohtml", "templates/layout.gohtml", "templates/pagination.gohtml")
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
 	err = tmpl.Execute(w, OrdersListTmplContext{
 		BaseTmplContext: BaseTmplContext{
 			Type: "orders",
 		},
 		Orders: orders,
-		Count:  count,
+		Pagination: PaginationInfo{
+			Page:     page,
+			PageSize: pageSize,
+			Count:    count,
+			urlPath:  "/orders",
+		},
 	})
 	if err != nil {
 		log.Println(err)
-	}
-}
-
-func customersSearchHandler(w http.ResponseWriter, r *http.Request) {
-	var customers []Customer
-
-	emailPart := r.URL.Query().Get("email")
-	if emailPart != "" {
-		_, pageSize := getPageAndSize(r)
-		customers, _ = searchCustomersByEmail(emailPart, pageSize)
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-
-	if len(customers) > 0 {
-		customersJson, _ := json.Marshal(customers)
-		w.Write(customersJson)
-	} else {
-		w.Write([]byte("[]"))
 	}
 }
 

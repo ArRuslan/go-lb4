@@ -15,19 +15,31 @@ type CharacteristicsListTmplContext struct {
 	BaseTmplContext
 
 	Characteristics []Characteristic
-	Count           int
+	Pagination      PaginationInfo
 }
 
 func characteristicsListHandler(w http.ResponseWriter, r *http.Request) {
-	characteristics, count, err := getCharacteristics(getPageAndSize(r))
+	page, pageSize := getPageAndSize(r)
+	characteristics, count, err := getCharacteristics(page, pageSize)
 
-	tmpl, _ := template.ParseFiles("templates/characteristics/list.gohtml", "templates/layout.gohtml")
+	tmpl := template.New("list.gohtml")
+	_, err = tmpl.Funcs(tmplPaginationFuncs).ParseFiles("templates/characteristics/list.gohtml", "templates/layout.gohtml", "templates/pagination.gohtml")
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
 	err = tmpl.Execute(w, CharacteristicsListTmplContext{
 		BaseTmplContext: BaseTmplContext{
 			Type: "characteristics",
 		},
 		Characteristics: characteristics,
-		Count:           count,
+		Pagination: PaginationInfo{
+			Page:     page,
+			PageSize: pageSize,
+			Count:    count,
+			urlPath:  "/characteristics",
+		},
 	})
 	if err != nil {
 		log.Println(err)

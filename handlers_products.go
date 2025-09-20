@@ -14,20 +14,32 @@ import (
 type ProductsListTmplContext struct {
 	BaseTmplContext
 
-	Products []Product
-	Count    int
+	Products   []Product
+	Pagination PaginationInfo
 }
 
 func productsListHandler(w http.ResponseWriter, r *http.Request) {
-	products, count, err := getProducts(getPageAndSize(r))
+	page, pageSize := getPageAndSize(r)
+	products, count, err := getProducts(page, pageSize)
 
-	tmpl, _ := template.ParseFiles("templates/products/list.gohtml", "templates/layout.gohtml")
-	err = tmpl.Execute(w, ProductsListTmplContext{
+	tmpl := template.New("list.gohtml")
+	_, err = tmpl.Funcs(tmplPaginationFuncs).ParseFiles("templates/products/list.gohtml", "templates/layout.gohtml", "templates/pagination.gohtml")
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	err = tmpl.Funcs(tmplPaginationFuncs).Execute(w, ProductsListTmplContext{
 		BaseTmplContext: BaseTmplContext{
 			Type: "products",
 		},
 		Products: products,
-		Count:    count,
+		Pagination: PaginationInfo{
+			Page:     page,
+			PageSize: pageSize,
+			Count:    count,
+			urlPath:  "/products",
+		},
 	})
 	if err != nil {
 		log.Println(err)
