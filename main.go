@@ -42,8 +42,8 @@ func main() {
 
 	http.HandleFunc("/categories", categoriesListHandler)
 	http.HandleFunc("/categories/create", categoryCreateHandler)
-	http.HandleFunc("/categories/{productId}/edit", categoryEditHandler)
-	http.HandleFunc("/categories/{productId}/delete", categoryDeleteHandler)
+	http.HandleFunc("/categories/{categoryId}/edit", categoryEditHandler)
+	http.HandleFunc("/categories/{categoryId}/delete", categoryDeleteHandler)
 	http.HandleFunc("/categories/search", categoriesSearchHandler)
 
 	http.HandleFunc("/characteristics", characteristicsListHandler)
@@ -68,7 +68,7 @@ func main() {
 
 	http.HandleFunc("/analysis", productsAnalysisHandler)
 
-	fmt.Println("Server is listening on port 8081")
+	fmt.Println("Server is listening on port 8081 (http://127.0.0.1:8081)")
 	err = http.ListenAndServe("127.0.0.1:8081", nil)
 	if err != nil {
 		panic(err)
