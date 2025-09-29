@@ -1,4 +1,4 @@
-package main
+package db
 
 import (
 	"database/sql"
@@ -9,6 +9,18 @@ import (
 )
 
 var database *sql.DB
+
+func InitDatabase(driver, dsn string) {
+	db, err := sql.Open(driver, dsn)
+	if err != nil {
+		panic(err)
+	}
+	database = db
+}
+
+func CloseDatabase() {
+	database.Close()
+}
 
 func getRowsAndCount[T any](page, pageSize int, getRows func(int, int) (*sql.Rows, error), scanRow func(*sql.Rows) (T, error), getCount func() *sql.Row) ([]T, int, error) {
 	var objects []T
@@ -45,7 +57,7 @@ func getRowsAndCount[T any](page, pageSize int, getRows func(int, int) (*sql.Row
 	return objects, count, nil
 }
 
-func getProducts(page, pageSize int) ([]Product, int, error) {
+func GetProducts(page, pageSize int) ([]Product, int, error) {
 	return getRowsAndCount(
 		page,
 		pageSize,
@@ -74,7 +86,7 @@ func getProducts(page, pageSize int) ([]Product, int, error) {
 	)
 }
 
-func searchProducts(model string, limit int) ([]Product, error) {
+func SearchProducts(model string, limit int) ([]Product, error) {
 	products, _, err := getRowsAndCount(
 		1,
 		limit,
@@ -105,7 +117,7 @@ func searchProducts(model string, limit int) ([]Product, error) {
 	return products, err
 }
 
-func createProduct(product Product) error {
+func CreateProduct(product Product) error {
 	var imageUrl sql.NullString
 	if product.ImageUrl == "" {
 		imageUrl = sql.NullString{}
@@ -128,7 +140,7 @@ func createProduct(product Product) error {
 	return err
 }
 
-func getProduct(productId int64) (Product, error) {
+func GetProduct(productId int64) (Product, error) {
 	var product Product
 
 	row := database.QueryRow(
@@ -148,7 +160,7 @@ func getProduct(productId int64) (Product, error) {
 	return product, err
 }
 
-func (product *Product) dbSave() error {
+func (product *Product) DbSave() error {
 	if product.Id > 0 {
 		var imageUrl sql.NullString
 		if product.ImageUrl == "" {
@@ -173,15 +185,15 @@ func (product *Product) dbSave() error {
 		return err
 	}
 
-	return createProduct(*product)
+	return CreateProduct(*product)
 }
 
-func (product *Product) dbDelete() error {
+func (product *Product) DbDelete() error {
 	_, err := database.Exec("DELETE FROM `products` WHERE `id`=?;", product.Id)
 	return err
 }
 
-func getCategories(page, pageSize int) ([]Category, int, error) {
+func GetCategories(page, pageSize int) ([]Category, int, error) {
 	return getRowsAndCount(
 		page,
 		pageSize,
@@ -207,7 +219,7 @@ func getCategories(page, pageSize int) ([]Category, int, error) {
 	)
 }
 
-func createCategory(category Category) error {
+func CreateCategory(category Category) error {
 	var description sql.NullString
 	if category.Description == "" {
 		description = sql.NullString{}
@@ -222,7 +234,7 @@ func createCategory(category Category) error {
 	return err
 }
 
-func getCategory(categoryId int) (Category, error) {
+func GetCategory(categoryId int) (Category, error) {
 	var category Category
 
 	row := database.QueryRow(
@@ -236,7 +248,7 @@ func getCategory(categoryId int) (Category, error) {
 	return category, err
 }
 
-func searchCategories(namePart string, limit int) ([]Category, error) {
+func SearchCategories(namePart string, limit int) ([]Category, error) {
 	categories, _, err := getRowsAndCount(
 		1,
 		limit,
@@ -263,7 +275,7 @@ func searchCategories(namePart string, limit int) ([]Category, error) {
 	return categories, err
 }
 
-func (category *Category) dbSave() error {
+func (category *Category) DbSave() error {
 	if category.Id > 0 {
 		var description sql.NullString
 		if category.Description == "" {
@@ -279,15 +291,15 @@ func (category *Category) dbSave() error {
 		return err
 	}
 
-	return createCategory(*category)
+	return CreateCategory(*category)
 }
 
-func (category *Category) dbDelete() error {
+func (category *Category) DbDelete() error {
 	_, err := database.Exec("DELETE FROM `categories` WHERE `id`=?;", category.Id)
 	return err
 }
 
-func getCharacteristics(page, pageSize int) ([]Characteristic, int, error) {
+func GetCharacteristics(page, pageSize int) ([]Characteristic, int, error) {
 	return getRowsAndCount(
 		page,
 		pageSize,
@@ -313,7 +325,7 @@ func getCharacteristics(page, pageSize int) ([]Characteristic, int, error) {
 	)
 }
 
-func searchCharacteristics(namePart string, limit int) ([]Characteristic, error) {
+func SearchCharacteristics(namePart string, limit int) ([]Characteristic, error) {
 	characteristics, _, err := getRowsAndCount(
 		1,
 		limit,
@@ -342,7 +354,7 @@ func searchCharacteristics(namePart string, limit int) ([]Characteristic, error)
 	return characteristics, err
 }
 
-func createCharacteristic(characteristic Characteristic) error {
+func CreateCharacteristic(characteristic Characteristic) error {
 	var unit sql.NullString
 	if characteristic.Unit == "" {
 		unit = sql.NullString{}
@@ -357,7 +369,7 @@ func createCharacteristic(characteristic Characteristic) error {
 	return err
 }
 
-func getCharacteristic(characteristicId int64) (Characteristic, error) {
+func GetCharacteristic(characteristicId int64) (Characteristic, error) {
 	var characteristic Characteristic
 
 	row := database.QueryRow(
@@ -371,7 +383,7 @@ func getCharacteristic(characteristicId int64) (Characteristic, error) {
 	return characteristic, err
 }
 
-func (characteristic *Characteristic) dbSave() error {
+func (characteristic *Characteristic) DbSave() error {
 	if characteristic.Id > 0 {
 		var unit sql.NullString
 		if characteristic.Unit == "" {
@@ -387,15 +399,15 @@ func (characteristic *Characteristic) dbSave() error {
 		return err
 	}
 
-	return createCharacteristic(*characteristic)
+	return CreateCharacteristic(*characteristic)
 }
 
-func (characteristic *Characteristic) dbDelete() error {
+func (characteristic *Characteristic) DbDelete() error {
 	_, err := database.Exec("DELETE FROM `characteristics` WHERE `id`=?;", characteristic.Id)
 	return err
 }
 
-func getCustomers(page, pageSize int) ([]Customer, int, error) {
+func GetCustomers(page, pageSize int) ([]Customer, int, error) {
 	return getRowsAndCount(
 		page,
 		pageSize,
@@ -419,7 +431,7 @@ func getCustomers(page, pageSize int) ([]Customer, int, error) {
 	)
 }
 
-func searchCustomersByEmail(emailPart string, limit int) ([]Customer, error) {
+func SearchCustomersByEmail(emailPart string, limit int) ([]Customer, error) {
 	customers, _, err := getRowsAndCount(
 		1,
 		limit,
@@ -446,7 +458,7 @@ func searchCustomersByEmail(emailPart string, limit int) ([]Customer, error) {
 	return customers, err
 }
 
-func createCustomer(customer Customer) error {
+func CreateCustomer(customer Customer) error {
 	_, err := database.Exec(
 		"INSERT INTO customers (first_name, last_name, email) VALUES (?, ?, ?);",
 		customer.FirstName, customer.LastName, customer.Email,
@@ -454,7 +466,7 @@ func createCustomer(customer Customer) error {
 	return err
 }
 
-func getCustomer(customerId int) (Customer, error) {
+func GetCustomer(customerId int) (Customer, error) {
 	var customer Customer
 
 	row := database.QueryRow(
@@ -468,7 +480,7 @@ func getCustomer(customerId int) (Customer, error) {
 	return customer, err
 }
 
-func getCustomerByEmail(email string) (Customer, error) {
+func GetCustomerByEmail(email string) (Customer, error) {
 	var customer Customer
 
 	row := database.QueryRow(
@@ -482,7 +494,7 @@ func getCustomerByEmail(email string) (Customer, error) {
 	return customer, err
 }
 
-func (customer *Customer) dbSave() error {
+func (customer *Customer) DbSave() error {
 	if customer.Id == 0 {
 		row := database.QueryRow("SELECT c.id FROM customers c WHERE c.email = ?;", customer.Email)
 		err := row.Scan(&customer.Id)
@@ -499,15 +511,15 @@ func (customer *Customer) dbSave() error {
 		return err
 	}
 
-	return createCustomer(*customer)
+	return CreateCustomer(*customer)
 }
 
-func (customer *Customer) dbDelete() error {
+func (customer *Customer) DbDelete() error {
 	_, err := database.Exec("DELETE FROM `customers` WHERE `id`=?;", customer.Id)
 	return err
 }
 
-func getOrders(page, pageSize int) ([]Order, int, error) {
+func GetOrders(page, pageSize int) ([]Order, int, error) {
 	return getRowsAndCount(
 		page,
 		pageSize,
@@ -536,14 +548,14 @@ func getOrders(page, pageSize int) ([]Order, int, error) {
 	)
 }
 
-func createOrder(order Order) error {
+func CreateOrder(order Order) error {
 	if order.Customer.Email != "" {
-		err := order.Customer.dbSave()
+		err := order.Customer.DbSave()
 		if err != nil {
 			return err
 		}
 		if order.Customer.Id == 0 {
-			customerByEmail, err := getCustomerByEmail(order.Customer.Email)
+			customerByEmail, err := GetCustomerByEmail(order.Customer.Email)
 			if err != nil {
 				return err
 			}
@@ -565,7 +577,7 @@ func createOrder(order Order) error {
 	return err
 }
 
-func getOrder(orderId int) (Order, error) {
+func GetOrder(orderId int) (Order, error) {
 	var order Order
 
 	row := database.QueryRow(
@@ -585,7 +597,7 @@ func getOrder(orderId int) (Order, error) {
 	return order, err
 }
 
-func (order *Order) dbSave() error {
+func (order *Order) DbSave() error {
 	if order.Id > 0 {
 		var customerId sql.NullInt64
 		if order.Customer.Id == 0 {
@@ -603,15 +615,15 @@ func (order *Order) dbSave() error {
 		return err
 	}
 
-	return createOrder(*order)
+	return CreateOrder(*order)
 }
 
-func (order *Order) dbDelete() error {
+func (order *Order) DbDelete() error {
 	_, err := database.Exec("DELETE FROM `orders` WHERE `id`=?;", order.Id)
 	return err
 }
 
-func getProductCharacteristics(productId int64) ([]ProductCharacteristic, int, error) {
+func GetProductCharacteristics(productId int64) ([]ProductCharacteristic, int, error) {
 	return getRowsAndCount(
 		1,
 		0,
@@ -641,7 +653,7 @@ func getProductCharacteristics(productId int64) ([]ProductCharacteristic, int, e
 	)
 }
 
-func getProductCharacteristic(characteristicId, productId int) (ProductCharacteristic, error) {
+func GetProductCharacteristic(characteristicId, productId int) (ProductCharacteristic, error) {
 	var char ProductCharacteristic
 
 	row := database.QueryRow(
@@ -661,7 +673,7 @@ func getProductCharacteristic(characteristicId, productId int) (ProductCharacter
 	return char, err
 }
 
-func createProductCharacteristic(char ProductCharacteristic) error {
+func CreateProductCharacteristic(char ProductCharacteristic) error {
 	_, err := database.Exec(
 		`INSERT INTO product_characteristics (product_id, characteristic_id, value) 
 		VALUES (?, ?, ?);`,
@@ -670,7 +682,7 @@ func createProductCharacteristic(char ProductCharacteristic) error {
 	return err
 }
 
-func (char *ProductCharacteristic) dbSave() error {
+func (char *ProductCharacteristic) DbSave() error {
 	if char.Id > 0 {
 		_, err := database.Exec(
 			`UPDATE product_characteristics 
@@ -681,15 +693,15 @@ func (char *ProductCharacteristic) dbSave() error {
 		return err
 	}
 
-	return createProductCharacteristic(*char)
+	return CreateProductCharacteristic(*char)
 }
 
-func (char *ProductCharacteristic) dbDelete() error {
+func (char *ProductCharacteristic) DbDelete() error {
 	_, err := database.Exec("DELETE FROM `product_characteristics` WHERE `id`=?;", char.Id)
 	return err
 }
 
-func getOrderItems(orderId int64) ([]OrderItem, int, error) {
+func GetOrderItems(orderId int64) ([]OrderItem, int, error) {
 	return getRowsAndCount(
 		1,
 		0,
@@ -719,7 +731,7 @@ func getOrderItems(orderId int64) ([]OrderItem, int, error) {
 	)
 }
 
-func getOrderItem(itemId, orderId int) (OrderItem, error) {
+func GetOrderItem(itemId, orderId int) (OrderItem, error) {
 	var item OrderItem
 
 	row := database.QueryRow(
@@ -739,7 +751,7 @@ func getOrderItem(itemId, orderId int) (OrderItem, error) {
 	return item, err
 }
 
-func createOrderItem(item OrderItem) error {
+func CreateOrderItem(item OrderItem) error {
 	_, err := database.Exec(
 		`INSERT INTO order_items (order_id, product_id, quantity, price_per_item) 
 		VALUES (?, ?, ?, ?);`,
@@ -748,7 +760,7 @@ func createOrderItem(item OrderItem) error {
 	return err
 }
 
-func (item *OrderItem) dbSave() error {
+func (item *OrderItem) DbSave() error {
 	if item.Id > 0 {
 		_, err := database.Exec(
 			`UPDATE order_items SET quantity=? WHERE id=?;`,
@@ -757,15 +769,15 @@ func (item *OrderItem) dbSave() error {
 		return err
 	}
 
-	return createOrderItem(*item)
+	return CreateOrderItem(*item)
 }
 
-func (item *OrderItem) dbDelete() error {
+func (item *OrderItem) DbDelete() error {
 	_, err := database.Exec("DELETE FROM `order_items` WHERE `id`=?;", item.Id)
 	return err
 }
 
-func _getMostLeastOrderedProduct(row *sql.Row) (Product, int64, error) {
+func getMostLeastOrderedProduct(row *sql.Row) (Product, int64, error) {
 	var productId, count int64
 
 	err := row.Scan(&productId, &count)
@@ -774,7 +786,7 @@ func _getMostLeastOrderedProduct(row *sql.Row) (Product, int64, error) {
 	}
 
 	var product Product
-	product, err = getProduct(productId)
+	product, err = GetProduct(productId)
 	if err != nil {
 		return Product{}, 0, err
 	}
@@ -782,8 +794,8 @@ func _getMostLeastOrderedProduct(row *sql.Row) (Product, int64, error) {
 	return product, count, nil
 }
 
-func getMostOrderedProduct() (Product, int64, error) {
-	return _getMostLeastOrderedProduct(database.QueryRow(
+func GetMostOrderedProduct() (Product, int64, error) {
+	return getMostLeastOrderedProduct(database.QueryRow(
 		`SELECT p.id, sum(i.quantity) AS total_bought
 		FROM products p
 			INNER JOIN order_items i ON p.id = i.product_id
@@ -794,8 +806,8 @@ func getMostOrderedProduct() (Product, int64, error) {
 	))
 }
 
-func getLeastOrderedProduct() (Product, int64, error) {
-	return _getMostLeastOrderedProduct(database.QueryRow(
+func GetLeastOrderedProduct() (Product, int64, error) {
+	return getMostLeastOrderedProduct(database.QueryRow(
 		`SELECT p.id, sum(i.quantity) AS total_bought
 		FROM products p
 			INNER JOIN order_items i ON p.id = i.product_id
@@ -806,7 +818,7 @@ func getLeastOrderedProduct() (Product, int64, error) {
 	))
 }
 
-func getOrdersAverageTotal() (float64, error) {
+func GetOrdersAverageTotal() (float64, error) {
 	row := database.QueryRow(
 		`SELECT avg(totals.total) FROM (
 			SELECT o.id, sum(i.quantity * i.price_per_item) AS total

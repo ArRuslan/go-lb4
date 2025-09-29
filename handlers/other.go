@@ -1,43 +1,45 @@
-package main
+package handlers
 
 import (
+	"go-lb4/db"
+	"go-lb4/utils"
 	"html/template"
 	"log"
 	"net/http"
 )
 
 type ProductWithCount struct {
-	Product Product
+	Product db.Product
 	Count   int64
 }
 
 type ProductsAnalysisTmplContext struct {
-	BaseTmplContext
+	utils.BaseTmplContext
 
 	MostOrdered       ProductWithCount
 	LeastOrdered      ProductWithCount
 	AverageOrderTotal float64
 }
 
-func productsAnalysisHandler(w http.ResponseWriter, _ *http.Request) {
-	mostOrdered, mostCount, err := getMostOrderedProduct()
-	if returnOnDatabaseError(err, w) {
+func ProductsAnalysisHandler(w http.ResponseWriter, _ *http.Request) {
+	mostOrdered, mostCount, err := db.GetMostOrderedProduct()
+	if utils.ReturnOnDatabaseError(err, w) {
 		return
 	}
 
-	leastOrdered, leastCount, err := getLeastOrderedProduct()
-	if returnOnDatabaseError(err, w) {
+	leastOrdered, leastCount, err := db.GetLeastOrderedProduct()
+	if utils.ReturnOnDatabaseError(err, w) {
 		return
 	}
 
-	averageTotal, err := getOrdersAverageTotal()
-	if returnOnDatabaseError(err, w) {
+	averageTotal, err := db.GetOrdersAverageTotal()
+	if utils.ReturnOnDatabaseError(err, w) {
 		return
 	}
 
 	tmpl, _ := template.ParseFiles("templates/analysis.gohtml", "templates/layout.gohtml")
 	err = tmpl.Execute(w, ProductsAnalysisTmplContext{
-		BaseTmplContext: BaseTmplContext{
+		BaseTmplContext: utils.BaseTmplContext{
 			Type: "analysis",
 		},
 		MostOrdered: ProductWithCount{

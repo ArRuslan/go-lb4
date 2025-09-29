@@ -1,4 +1,4 @@
-package main
+package utils
 
 import (
 	"html/template"
@@ -9,7 +9,7 @@ type PaginationInfo struct {
 	PageSize int
 	Count    int
 
-	urlPath string
+	UrlPath string
 }
 
 type PaginationResult struct {
@@ -22,10 +22,10 @@ type PaginationResult struct {
 	UrlPath string
 }
 
-var tmplPaginationFuncs = template.FuncMap{
+var TmplPaginationFuncs = template.FuncMap{
 	"calculatePagination": func(pagination PaginationInfo) PaginationResult {
 		result := PaginationResult{
-			UrlPath: pagination.urlPath,
+			UrlPath: pagination.UrlPath,
 		}
 
 		totalPages := (pagination.Count + pagination.PageSize - 1) / pagination.PageSize

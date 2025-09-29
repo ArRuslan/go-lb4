@@ -1,4 +1,4 @@
-package main
+package utils
 
 import (
 	"fmt"
@@ -7,7 +7,7 @@ import (
 	"strconv"
 )
 
-func getPageAndSize(req *http.Request) (int, int) {
+func GetPageAndSize(req *http.Request) (int, int) {
 	pageMaybe := req.URL.Query().Get("page")
 	page, err := strconv.Atoi(pageMaybe)
 	if err != nil {
@@ -23,7 +23,7 @@ func getPageAndSize(req *http.Request) (int, int) {
 	return page, min(pageSize, 100)
 }
 
-func getFormStringNonEmpty(req *http.Request, name string, errorText *string, valid *bool, out *string) string {
+func GetFormStringNonEmpty(req *http.Request, name string, errorText *string, valid *bool, out *string) string {
 	value := req.FormValue(name)
 
 	if out != nil {
@@ -42,7 +42,7 @@ func getFormStringNonEmpty(req *http.Request, name string, errorText *string, va
 	return value
 }
 
-func getFormString(req *http.Request, name string, _ *string, _ *bool, out *string) string {
+func GetFormString(req *http.Request, name string, _ *string, _ *bool, out *string) string {
 	value := req.FormValue(name)
 
 	if out != nil {
@@ -52,7 +52,7 @@ func getFormString(req *http.Request, name string, _ *string, _ *bool, out *stri
 	return value
 }
 
-func getFormInt(req *http.Request, name string, errorText *string, valid *bool, out *string) int {
+func GetFormInt(req *http.Request, name string, errorText *string, valid *bool, out *string) int {
 	value := req.FormValue(name)
 
 	if out != nil {
@@ -72,7 +72,7 @@ func getFormInt(req *http.Request, name string, errorText *string, valid *bool, 
 	return valueInt
 }
 
-func getFormInt64(req *http.Request, name string, errorText *string, valid *bool, out *string) int64 {
+func GetFormInt64(req *http.Request, name string, errorText *string, valid *bool, out *string) int64 {
 	value := req.FormValue(name)
 
 	if out != nil {
@@ -92,7 +92,7 @@ func getFormInt64(req *http.Request, name string, errorText *string, valid *bool
 	return valueInt
 }
 
-func getFormDouble(req *http.Request, name string, errorText *string, valid *bool, out *string) float64 {
+func GetFormDouble(req *http.Request, name string, errorText *string, valid *bool, out *string) float64 {
 	value := req.FormValue(name)
 
 	if out != nil {
@@ -112,7 +112,7 @@ func getFormDouble(req *http.Request, name string, errorText *string, valid *boo
 	return valueDouble
 }
 
-func returnOnDatabaseError(err error, w http.ResponseWriter) bool {
+func ReturnOnDatabaseError(err error, w http.ResponseWriter) bool {
 	if err == nil {
 		return false
 	}

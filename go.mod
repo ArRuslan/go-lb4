@@ -1,4 +1,4 @@
-module go-pz3
+module go-lb4
 
 go 1.24
 

@@ -1,10 +1,12 @@
-package main
+package handlers
 
 import (
 	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"go-lb4/db"
+	"go-lb4/utils"
 	"html/template"
 	"log"
 	"net/http"
@@ -12,33 +14,33 @@ import (
 )
 
 type CharacteristicsListTmplContext struct {
-	BaseTmplContext
+	utils.BaseTmplContext
 
-	Characteristics []Characteristic
-	Pagination      PaginationInfo
+	Characteristics []db.Characteristic
+	Pagination      utils.PaginationInfo
 }
 
-func characteristicsListHandler(w http.ResponseWriter, r *http.Request) {
-	page, pageSize := getPageAndSize(r)
-	characteristics, count, err := getCharacteristics(page, pageSize)
+func CharacteristicsListHandler(w http.ResponseWriter, r *http.Request) {
+	page, pageSize := utils.GetPageAndSize(r)
+	characteristics, count, err := db.GetCharacteristics(page, pageSize)
 
 	tmpl := template.New("list.gohtml")
-	_, err = tmpl.Funcs(tmplPaginationFuncs).ParseFiles("templates/characteristics/list.gohtml", "templates/layout.gohtml", "templates/pagination.gohtml")
+	_, err = tmpl.Funcs(utils.TmplPaginationFuncs).ParseFiles("templates/characteristics/list.gohtml", "templates/layout.gohtml", "templates/pagination.gohtml")
 	if err != nil {
 		log.Println(err)
 		return
 	}
 
 	err = tmpl.Execute(w, CharacteristicsListTmplContext{
-		BaseTmplContext: BaseTmplContext{
+		BaseTmplContext: utils.BaseTmplContext{
 			Type: "characteristics",
 		},
 		Characteristics: characteristics,
-		Pagination: PaginationInfo{
+		Pagination: utils.PaginationInfo{
 			Page:     page,
 			PageSize: pageSize,
 			Count:    count,
-			urlPath:  "/characteristics",
+			UrlPath:  "/characteristics",
 		},
 	})
 	if err != nil {
@@ -46,13 +48,13 @@ func characteristicsListHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func characteristicsSearchHandler(w http.ResponseWriter, r *http.Request) {
-	var characteristics []Characteristic
+func CharacteristicsSearchHandler(w http.ResponseWriter, r *http.Request) {
+	var characteristics []db.Characteristic
 
 	namePart := r.URL.Query().Get("name")
 	if namePart != "" {
-		_, pageSize := getPageAndSize(r)
-		characteristics, _ = searchCharacteristics(namePart, pageSize)
+		_, pageSize := utils.GetPageAndSize(r)
+		characteristics, _ = db.SearchCharacteristics(namePart, pageSize)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -66,7 +68,7 @@ func characteristicsSearchHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type CreateCharacteristicTmplContext struct {
-	BaseTmplContext
+	utils.BaseTmplContext
 
 	Name string
 	Unit string
@@ -74,22 +76,22 @@ type CreateCharacteristicTmplContext struct {
 	Error string
 }
 
-func characteristicCreateHandler(w http.ResponseWriter, r *http.Request) {
+func CharacteristicCreateHandler(w http.ResponseWriter, r *http.Request) {
 	resp := CreateCharacteristicTmplContext{
-		BaseTmplContext: BaseTmplContext{
+		BaseTmplContext: utils.BaseTmplContext{
 			Type: "characteristics",
 		},
 	}
 
 	if r.Method == "POST" {
 		allGood := true
-		var newCharacteristic Characteristic
+		var newCharacteristic db.Characteristic
 
-		newCharacteristic.Name = getFormStringNonEmpty(r, "name", &resp.Error, &allGood, &resp.Name)
-		newCharacteristic.Unit = getFormString(r, "measurement_unit", &resp.Error, &allGood, &resp.Unit)
+		newCharacteristic.Name = utils.GetFormStringNonEmpty(r, "name", &resp.Error, &allGood, &resp.Name)
+		newCharacteristic.Unit = utils.GetFormString(r, "measurement_unit", &resp.Error, &allGood, &resp.Unit)
 
 		if allGood {
-			err := newCharacteristic.dbSave()
+			err := newCharacteristic.DbSave()
 			if err != nil {
 				log.Println(err)
 			}
@@ -107,7 +109,7 @@ func characteristicCreateHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type EditCharacteristicTmplContext struct {
-	BaseTmplContext
+	utils.BaseTmplContext
 
 	Name string
 	Unit string
@@ -115,7 +117,7 @@ type EditCharacteristicTmplContext struct {
 	Error string
 }
 
-func characteristicEditHandler(w http.ResponseWriter, r *http.Request) {
+func CharacteristicEditHandler(w http.ResponseWriter, r *http.Request) {
 	characteristicIdStr := r.PathValue("characteristicId")
 	characteristicId, err := strconv.ParseInt(characteristicIdStr, 10, 64)
 	if err != nil {
@@ -123,7 +125,7 @@ func characteristicEditHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	characteristic, err := getCharacteristic(characteristicId)
+	characteristic, err := db.GetCharacteristic(characteristicId)
 	if errors.Is(err, sql.ErrNoRows) {
 		w.WriteHeader(404)
 		w.Write([]byte("Unknown characteristic!"))
@@ -137,7 +139,7 @@ func characteristicEditHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp := EditCharacteristicTmplContext{
-		BaseTmplContext: BaseTmplContext{
+		BaseTmplContext: utils.BaseTmplContext{
 			Type: "characteristics",
 		},
 		Name: characteristic.Name,
@@ -147,11 +149,11 @@ func characteristicEditHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		allGood := true
 
-		characteristic.Name = getFormStringNonEmpty(r, "name", &resp.Error, &allGood, &resp.Name)
-		characteristic.Unit = getFormString(r, "measurement_unit", &resp.Error, &allGood, &resp.Unit)
+		characteristic.Name = utils.GetFormStringNonEmpty(r, "name", &resp.Error, &allGood, &resp.Name)
+		characteristic.Unit = utils.GetFormString(r, "measurement_unit", &resp.Error, &allGood, &resp.Unit)
 
 		if allGood {
-			err = characteristic.dbSave()
+			err = characteristic.DbSave()
 			if err == nil {
 				http.Redirect(w, r, "/characteristics", 301)
 				return
@@ -170,12 +172,12 @@ func characteristicEditHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type CharacteristicTmplContext struct {
-	BaseTmplContext
-	Characteristic Characteristic
+	utils.BaseTmplContext
+	Characteristic db.Characteristic
 	Error          string
 }
 
-func characteristicDeleteHandler(w http.ResponseWriter, r *http.Request) {
+func CharacteristicDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	characteristicIdStr := r.PathValue("characteristicId")
 	characteristicId, err := strconv.ParseInt(characteristicIdStr, 10, 64)
 	if err != nil {
@@ -183,7 +185,7 @@ func characteristicDeleteHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	characteristic, err := getCharacteristic(characteristicId)
+	characteristic, err := db.GetCharacteristic(characteristicId)
 	if errors.Is(err, sql.ErrNoRows) {
 		w.WriteHeader(404)
 		w.Write([]byte("Unknown characteristic!"))
@@ -197,7 +199,7 @@ func characteristicDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp := CharacteristicTmplContext{
-		BaseTmplContext: BaseTmplContext{
+		BaseTmplContext: utils.BaseTmplContext{
 			Type: "characteristics",
 		},
 		Characteristic: characteristic,
@@ -205,7 +207,7 @@ func characteristicDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method == "POST" {
-		err = characteristic.dbDelete()
+		err = characteristic.DbDelete()
 		if err == nil {
 			http.Redirect(w, r, "/characteristics", 301)
 			return

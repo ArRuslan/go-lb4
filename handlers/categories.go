@@ -1,10 +1,12 @@
-package main
+package handlers
 
 import (
 	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"go-lb4/db"
+	"go-lb4/utils"
 	"html/template"
 	"log"
 	"net/http"
@@ -12,33 +14,33 @@ import (
 )
 
 type CategoriesListTmplContext struct {
-	BaseTmplContext
+	utils.BaseTmplContext
 
-	Categories []Category
-	Pagination PaginationInfo
+	Categories []db.Category
+	Pagination utils.PaginationInfo
 }
 
-func categoriesListHandler(w http.ResponseWriter, r *http.Request) {
-	page, pageSize := getPageAndSize(r)
-	categories, count, err := getCategories(page, pageSize)
+func CategoriesListHandler(w http.ResponseWriter, r *http.Request) {
+	page, pageSize := utils.GetPageAndSize(r)
+	categories, count, err := db.GetCategories(page, pageSize)
 
 	tmpl := template.New("list.gohtml")
-	_, err = tmpl.Funcs(tmplPaginationFuncs).ParseFiles("templates/categories/list.gohtml", "templates/layout.gohtml", "templates/pagination.gohtml")
+	_, err = tmpl.Funcs(utils.TmplPaginationFuncs).ParseFiles("templates/categories/list.gohtml", "templates/layout.gohtml", "templates/pagination.gohtml")
 	if err != nil {
 		log.Println(err)
 		return
 	}
 
 	err = tmpl.Execute(w, CategoriesListTmplContext{
-		BaseTmplContext: BaseTmplContext{
+		BaseTmplContext: utils.BaseTmplContext{
 			Type: "categories",
 		},
 		Categories: categories,
-		Pagination: PaginationInfo{
+		Pagination: utils.PaginationInfo{
 			Page:     page,
 			PageSize: pageSize,
 			Count:    count,
-			urlPath:  "/categories",
+			UrlPath:  "/categories",
 		},
 	})
 	if err != nil {
@@ -46,13 +48,13 @@ func categoriesListHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func categoriesSearchHandler(w http.ResponseWriter, r *http.Request) {
-	var categories []Category
+func CategoriesSearchHandler(w http.ResponseWriter, r *http.Request) {
+	var categories []db.Category
 
 	namePart := r.URL.Query().Get("name")
 	if namePart != "" {
-		_, pageSize := getPageAndSize(r)
-		categories, _ = searchCategories(namePart, pageSize)
+		_, pageSize := utils.GetPageAndSize(r)
+		categories, _ = db.SearchCategories(namePart, pageSize)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -66,7 +68,7 @@ func categoriesSearchHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type CreateCategoryTmplContext struct {
-	BaseTmplContext
+	utils.BaseTmplContext
 
 	Name        string
 	Description string
@@ -74,22 +76,22 @@ type CreateCategoryTmplContext struct {
 	Error string
 }
 
-func categoryCreateHandler(w http.ResponseWriter, r *http.Request) {
+func CategoryCreateHandler(w http.ResponseWriter, r *http.Request) {
 	resp := CreateCategoryTmplContext{
-		BaseTmplContext: BaseTmplContext{
+		BaseTmplContext: utils.BaseTmplContext{
 			Type: "categories",
 		},
 	}
 
 	if r.Method == "POST" {
 		allGood := true
-		var newCategory Category
+		var newCategory db.Category
 
-		newCategory.Name = getFormStringNonEmpty(r, "name", &resp.Error, &allGood, &resp.Name)
-		newCategory.Description = getFormString(r, "description", &resp.Error, &allGood, &resp.Description)
+		newCategory.Name = utils.GetFormStringNonEmpty(r, "name", &resp.Error, &allGood, &resp.Name)
+		newCategory.Description = utils.GetFormString(r, "description", &resp.Error, &allGood, &resp.Description)
 
 		if allGood {
-			err := newCategory.dbSave()
+			err := newCategory.DbSave()
 			if err != nil {
 				log.Println(err)
 			}
@@ -107,7 +109,7 @@ func categoryCreateHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type EditCategoryTmplContext struct {
-	BaseTmplContext
+	utils.BaseTmplContext
 
 	Name        string
 	Description string
@@ -115,7 +117,7 @@ type EditCategoryTmplContext struct {
 	Error string
 }
 
-func categoryEditHandler(w http.ResponseWriter, r *http.Request) {
+func CategoryEditHandler(w http.ResponseWriter, r *http.Request) {
 	categoryIdStr := r.PathValue("categoryId")
 	categoryId, err := strconv.Atoi(categoryIdStr)
 	if err != nil {
@@ -123,7 +125,7 @@ func categoryEditHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	category, err := getCategory(categoryId)
+	category, err := db.GetCategory(categoryId)
 	if errors.Is(err, sql.ErrNoRows) {
 		w.WriteHeader(404)
 		w.Write([]byte("Unknown category!"))
@@ -137,7 +139,7 @@ func categoryEditHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp := EditCategoryTmplContext{
-		BaseTmplContext: BaseTmplContext{
+		BaseTmplContext: utils.BaseTmplContext{
 			Type: "categories",
 		},
 		Name:        category.Name,
@@ -147,11 +149,11 @@ func categoryEditHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		allGood := true
 
-		category.Name = getFormStringNonEmpty(r, "name", &resp.Error, &allGood, &resp.Name)
-		category.Description = getFormString(r, "description", &resp.Error, &allGood, &resp.Description)
+		category.Name = utils.GetFormStringNonEmpty(r, "name", &resp.Error, &allGood, &resp.Name)
+		category.Description = utils.GetFormString(r, "description", &resp.Error, &allGood, &resp.Description)
 
 		if allGood {
-			err = category.dbSave()
+			err = category.DbSave()
 			if err == nil {
 				http.Redirect(w, r, "/categories", 301)
 				return
@@ -170,13 +172,13 @@ func categoryEditHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type CategoryTmplContext struct {
-	BaseTmplContext
+	utils.BaseTmplContext
 
-	Category Category
+	Category db.Category
 	Error    string
 }
 
-func categoryDeleteHandler(w http.ResponseWriter, r *http.Request) {
+func CategoryDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	categoryIdStr := r.PathValue("categoryId")
 	categoryId, err := strconv.Atoi(categoryIdStr)
 	if err != nil {
@@ -184,7 +186,7 @@ func categoryDeleteHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	category, err := getCategory(categoryId)
+	category, err := db.GetCategory(categoryId)
 	if errors.Is(err, sql.ErrNoRows) {
 		w.WriteHeader(404)
 		w.Write([]byte("Unknown category!"))
@@ -198,7 +200,7 @@ func categoryDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp := CategoryTmplContext{
-		BaseTmplContext: BaseTmplContext{
+		BaseTmplContext: utils.BaseTmplContext{
 			Type: "categories",
 		},
 		Category: category,
@@ -206,7 +208,7 @@ func categoryDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method == "POST" {
-		err = category.dbDelete()
+		err = category.DbDelete()
 		if err == nil {
 			http.Redirect(w, r, "/categories", 301)
 			return

@@ -1,9 +1,11 @@
-package main
+package handlers
 
 import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"go-lb4/db"
+	"go-lb4/utils"
 	"html/template"
 	"log"
 	"net/http"
@@ -11,32 +13,32 @@ import (
 )
 
 type OrdersListTmplContext struct {
-	BaseTmplContext
-	Orders     []Order
-	Pagination PaginationInfo
+	utils.BaseTmplContext
+	Orders     []db.Order
+	Pagination utils.PaginationInfo
 }
 
-func ordersListHandler(w http.ResponseWriter, r *http.Request) {
-	page, pageSize := getPageAndSize(r)
-	orders, count, err := getOrders(page, pageSize)
+func OrdersListHandler(w http.ResponseWriter, r *http.Request) {
+	page, pageSize := utils.GetPageAndSize(r)
+	orders, count, err := db.GetOrders(page, pageSize)
 
 	tmpl := template.New("list.gohtml")
-	_, err = tmpl.Funcs(tmplPaginationFuncs).ParseFiles("templates/orders/list.gohtml", "templates/layout.gohtml", "templates/pagination.gohtml")
+	_, err = tmpl.Funcs(utils.TmplPaginationFuncs).ParseFiles("templates/orders/list.gohtml", "templates/layout.gohtml", "templates/pagination.gohtml")
 	if err != nil {
 		log.Println(err)
 		return
 	}
 
 	err = tmpl.Execute(w, OrdersListTmplContext{
-		BaseTmplContext: BaseTmplContext{
+		BaseTmplContext: utils.BaseTmplContext{
 			Type: "orders",
 		},
 		Orders: orders,
-		Pagination: PaginationInfo{
+		Pagination: utils.PaginationInfo{
 			Page:     page,
 			PageSize: pageSize,
 			Count:    count,
-			urlPath:  "/orders",
+			UrlPath:  "/orders",
 		},
 	})
 	if err != nil {
@@ -45,7 +47,7 @@ func ordersListHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type CreateOrderTmplContext struct {
-	BaseTmplContext
+	utils.BaseTmplContext
 
 	CustomerEmail     string
 	CustomerFirstName string
@@ -55,24 +57,24 @@ type CreateOrderTmplContext struct {
 	Error string
 }
 
-func orderCreateHandler(w http.ResponseWriter, r *http.Request) {
+func OrderCreateHandler(w http.ResponseWriter, r *http.Request) {
 	resp := CreateOrderTmplContext{
-		BaseTmplContext: BaseTmplContext{
+		BaseTmplContext: utils.BaseTmplContext{
 			Type: "orders",
 		},
 	}
 
 	if r.Method == "POST" {
 		allGood := true
-		var newOrder Order
+		var newOrder db.Order
 
-		newOrder.Customer.Email = getFormStringNonEmpty(r, "customer_email", &resp.Error, &allGood, &resp.CustomerEmail)
-		newOrder.Customer.FirstName = getFormStringNonEmpty(r, "customer_first_name", &resp.Error, &allGood, &resp.CustomerFirstName)
-		newOrder.Customer.LastName = getFormStringNonEmpty(r, "customer_last_name", &resp.Error, &allGood, &resp.CustomerLastName)
-		newOrder.Address = getFormStringNonEmpty(r, "address", &resp.Error, &allGood, &resp.Address)
+		newOrder.Customer.Email = utils.GetFormStringNonEmpty(r, "customer_email", &resp.Error, &allGood, &resp.CustomerEmail)
+		newOrder.Customer.FirstName = utils.GetFormStringNonEmpty(r, "customer_first_name", &resp.Error, &allGood, &resp.CustomerFirstName)
+		newOrder.Customer.LastName = utils.GetFormStringNonEmpty(r, "customer_last_name", &resp.Error, &allGood, &resp.CustomerLastName)
+		newOrder.Address = utils.GetFormStringNonEmpty(r, "address", &resp.Error, &allGood, &resp.Address)
 
 		if allGood {
-			err := newOrder.dbSave()
+			err := newOrder.DbSave()
 			if err != nil {
 				log.Println(err)
 			}
@@ -90,7 +92,7 @@ func orderCreateHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type EditOrderTmplContext struct {
-	BaseTmplContext
+	utils.BaseTmplContext
 
 	CustomerEmailReadonly     string
 	CustomerFirstNameReadonly string
@@ -101,7 +103,7 @@ type EditOrderTmplContext struct {
 	Error        string
 }
 
-func orderEditHandler(w http.ResponseWriter, r *http.Request) {
+func OrderEditHandler(w http.ResponseWriter, r *http.Request) {
 	backLocation := r.URL.Query().Get("back")
 	orderIdStr := r.PathValue("orderId")
 	orderId, err := strconv.Atoi(orderIdStr)
@@ -117,7 +119,7 @@ func orderEditHandler(w http.ResponseWriter, r *http.Request) {
 		backLocation = "/orders"
 	}
 
-	order, err := getOrder(orderId)
+	order, err := db.GetOrder(orderId)
 	if errors.Is(err, sql.ErrNoRows) {
 		w.WriteHeader(404)
 		w.Write([]byte("Unknown order!"))
@@ -131,7 +133,7 @@ func orderEditHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp := EditOrderTmplContext{
-		BaseTmplContext: BaseTmplContext{
+		BaseTmplContext: utils.BaseTmplContext{
 			Type: "orders",
 		},
 		CustomerEmailReadonly:     order.Customer.Email,
@@ -144,10 +146,10 @@ func orderEditHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		allGood := true
 
-		order.Address = getFormStringNonEmpty(r, "address", &resp.Error, &allGood, &resp.Address)
+		order.Address = utils.GetFormStringNonEmpty(r, "address", &resp.Error, &allGood, &resp.Address)
 
 		if allGood {
-			err = order.dbSave()
+			err = order.DbSave()
 			if err == nil {
 				http.Redirect(w, r, backLocation, 301)
 				return
@@ -166,14 +168,14 @@ func orderEditHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type OrderTmplContext struct {
-	BaseTmplContext
+	utils.BaseTmplContext
 
-	Order        Order
+	Order        db.Order
 	BackLocation string
 	Error        string
 }
 
-func orderDeleteHandler(w http.ResponseWriter, r *http.Request) {
+func OrderDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	backLocation := r.URL.Query().Get("back")
 	orderIdStr := r.PathValue("orderId")
 	orderId, err := strconv.Atoi(orderIdStr)
@@ -189,7 +191,7 @@ func orderDeleteHandler(w http.ResponseWriter, r *http.Request) {
 		backLocation = "/orders"
 	}
 
-	order, err := getOrder(orderId)
+	order, err := db.GetOrder(orderId)
 	if errors.Is(err, sql.ErrNoRows) {
 		w.WriteHeader(404)
 		w.Write([]byte("Unknown order!"))
@@ -203,7 +205,7 @@ func orderDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp := OrderTmplContext{
-		BaseTmplContext: BaseTmplContext{
+		BaseTmplContext: utils.BaseTmplContext{
 			Type: "orders",
 		},
 		Order:        order,
@@ -212,7 +214,7 @@ func orderDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method == "POST" {
-		err = order.dbDelete()
+		err = order.DbDelete()
 		if err == nil {
 			http.Redirect(w, r, backLocation, 301)
 			return
@@ -230,13 +232,13 @@ func orderDeleteHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type OrderWithProductsTmplContext struct {
-	BaseTmplContext
+	utils.BaseTmplContext
 
-	Order    Order
-	Products []OrderItem
+	Order    db.Order
+	Products []db.OrderItem
 }
 
-func orderPageHandler(w http.ResponseWriter, r *http.Request) {
+func OrderPageHandler(w http.ResponseWriter, r *http.Request) {
 	orderIdStr := r.PathValue("orderId")
 	orderId, err := strconv.Atoi(orderIdStr)
 	if err != nil {
@@ -244,7 +246,7 @@ func orderPageHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	order, err := getOrder(orderId)
+	order, err := db.GetOrder(orderId)
 	if errors.Is(err, sql.ErrNoRows) {
 		w.WriteHeader(404)
 		w.Write([]byte("Unknown order!"))
@@ -257,8 +259,8 @@ func orderPageHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var items []OrderItem
-	items, _, err = getOrderItems(order.Id)
+	var items []db.OrderItem
+	items, _, err = db.GetOrderItems(order.Id)
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(500)
@@ -267,7 +269,7 @@ func orderPageHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp := OrderWithProductsTmplContext{
-		BaseTmplContext: BaseTmplContext{
+		BaseTmplContext: utils.BaseTmplContext{
 			Type: "orders",
 		},
 		Order:    order,
@@ -281,7 +283,7 @@ func orderPageHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func orderAddProductHandler(w http.ResponseWriter, r *http.Request) {
+func OrderAddProductHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		w.WriteHeader(405)
 		w.Write([]byte("Method is not allowed!"))
@@ -296,16 +298,16 @@ func orderAddProductHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	allGood := true
-	prodId := getFormInt64(r, "product_id", nil, &allGood, nil)
-	prodQuantity := getFormInt(r, "quantity", nil, &allGood, nil)
+	prodId := utils.GetFormInt64(r, "product_id", nil, &allGood, nil)
+	prodQuantity := utils.GetFormInt(r, "quantity", nil, &allGood, nil)
 
 	if !allGood {
 		http.Redirect(w, r, "/orders/"+orderIdStr, 301)
 		return
 	}
 
-	var order Order
-	order, err = getOrder(orderId)
+	var order db.Order
+	order, err = db.GetOrder(orderId)
 	if errors.Is(err, sql.ErrNoRows) {
 		w.WriteHeader(404)
 		w.Write([]byte("Unknown order!"))
@@ -318,7 +320,7 @@ func orderAddProductHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	product, err := getProduct(prodId)
+	product, err := db.GetProduct(prodId)
 	if errors.Is(err, sql.ErrNoRows) {
 		w.WriteHeader(404)
 		w.Write([]byte("Unknown product!"))
@@ -336,7 +338,7 @@ func orderAddProductHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	orderItem := OrderItem{
+	orderItem := db.OrderItem{
 		Id:           0,
 		OrderId:      order.Id,
 		Product:      product,
@@ -345,7 +347,7 @@ func orderAddProductHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	product.Quantity -= prodQuantity
-	err = product.dbSave()
+	err = product.DbSave()
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(500)
@@ -353,10 +355,10 @@ func orderAddProductHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = orderItem.dbSave()
+	err = orderItem.DbSave()
 	if err != nil {
 		product.Quantity += prodQuantity
-		err = product.dbSave()
+		err = product.DbSave()
 
 		log.Println(err)
 		w.WriteHeader(500)
@@ -367,7 +369,7 @@ func orderAddProductHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/orders/"+orderIdStr, 301)
 }
 
-func orderDeleteProductHandler(w http.ResponseWriter, r *http.Request) {
+func OrderDeleteProductHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		w.WriteHeader(405)
 		w.Write([]byte("Method is not allowed!"))
@@ -388,7 +390,7 @@ func orderDeleteProductHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	item, err := getOrderItem(itemId, orderId)
+	item, err := db.GetOrderItem(itemId, orderId)
 	if errors.Is(err, sql.ErrNoRows) {
 		w.WriteHeader(404)
 		w.Write([]byte("Unknown order item!"))
@@ -401,7 +403,7 @@ func orderDeleteProductHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = item.dbDelete()
+	err = item.DbDelete()
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(500)
@@ -411,7 +413,7 @@ func orderDeleteProductHandler(w http.ResponseWriter, r *http.Request) {
 
 	product := item.Product
 	product.Quantity += item.Quantity
-	err = product.dbSave()
+	err = product.DbSave()
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(500)

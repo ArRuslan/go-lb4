@@ -1,10 +1,12 @@
-package main
+package handlers
 
 import (
 	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"go-lb4/db"
+	"go-lb4/utils"
 	"html/template"
 	"log"
 	"net/http"
@@ -12,33 +14,33 @@ import (
 )
 
 type ProductsListTmplContext struct {
-	BaseTmplContext
+	utils.BaseTmplContext
 
-	Products   []Product
-	Pagination PaginationInfo
+	Products   []db.Product
+	Pagination utils.PaginationInfo
 }
 
-func productsListHandler(w http.ResponseWriter, r *http.Request) {
-	page, pageSize := getPageAndSize(r)
-	products, count, err := getProducts(page, pageSize)
+func ProductsListHandler(w http.ResponseWriter, r *http.Request) {
+	page, pageSize := utils.GetPageAndSize(r)
+	products, count, err := db.GetProducts(page, pageSize)
 
 	tmpl := template.New("list.gohtml")
-	_, err = tmpl.Funcs(tmplPaginationFuncs).ParseFiles("templates/products/list.gohtml", "templates/layout.gohtml", "templates/pagination.gohtml")
+	_, err = tmpl.Funcs(utils.TmplPaginationFuncs).ParseFiles("templates/products/list.gohtml", "templates/layout.gohtml", "templates/pagination.gohtml")
 	if err != nil {
 		log.Println(err)
 		return
 	}
 
-	err = tmpl.Funcs(tmplPaginationFuncs).Execute(w, ProductsListTmplContext{
-		BaseTmplContext: BaseTmplContext{
+	err = tmpl.Funcs(utils.TmplPaginationFuncs).Execute(w, ProductsListTmplContext{
+		BaseTmplContext: utils.BaseTmplContext{
 			Type: "products",
 		},
 		Products: products,
-		Pagination: PaginationInfo{
+		Pagination: utils.PaginationInfo{
 			Page:     page,
 			PageSize: pageSize,
 			Count:    count,
-			urlPath:  "/products",
+			UrlPath:  "/products",
 		},
 	})
 	if err != nil {
@@ -46,13 +48,13 @@ func productsListHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func productsSearchHandler(w http.ResponseWriter, r *http.Request) {
-	var products []Product
+func ProductsSearchHandler(w http.ResponseWriter, r *http.Request) {
+	var products []db.Product
 
 	namePart := r.URL.Query().Get("model")
 	if namePart != "" {
-		_, pageSize := getPageAndSize(r)
-		products, _ = searchProducts(namePart, pageSize)
+		_, pageSize := utils.GetPageAndSize(r)
+		products, _ = db.SearchProducts(namePart, pageSize)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -66,7 +68,7 @@ func productsSearchHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type CreateProductTmplContext struct {
-	BaseTmplContext
+	utils.BaseTmplContext
 
 	Model        string
 	Manufacturer string
@@ -79,27 +81,27 @@ type CreateProductTmplContext struct {
 	Error string
 }
 
-func productCreateHandler(w http.ResponseWriter, r *http.Request) {
+func ProductCreateHandler(w http.ResponseWriter, r *http.Request) {
 	resp := CreateProductTmplContext{
-		BaseTmplContext: BaseTmplContext{
+		BaseTmplContext: utils.BaseTmplContext{
 			Type: "products",
 		},
 	}
 
 	if r.Method == "POST" {
 		allGood := true
-		var newProduct Product
+		var newProduct db.Product
 
-		newProduct.Model = getFormStringNonEmpty(r, "model", &resp.Error, &allGood, &resp.Model)
-		newProduct.Manufacturer = getFormStringNonEmpty(r, "manufacturer", &resp.Error, &allGood, &resp.Manufacturer)
-		newProduct.Price = getFormDouble(r, "price", &resp.Error, &allGood, &resp.Price)
-		newProduct.Quantity = getFormInt(r, "quantity", &resp.Error, &allGood, &resp.Quantity)
-		newProduct.WarrantyDays = getFormInt(r, "warranty_days", &resp.Error, &allGood, &resp.WarrantyDays)
-		newProduct.ImageUrl = getFormString(r, "image_url", &resp.Error, &allGood, &resp.ImageUrl)
-		newProduct.Category.Id = getFormInt64(r, "category_id", &resp.Error, &allGood, &resp.CategoryId)
+		newProduct.Model = utils.GetFormStringNonEmpty(r, "model", &resp.Error, &allGood, &resp.Model)
+		newProduct.Manufacturer = utils.GetFormStringNonEmpty(r, "manufacturer", &resp.Error, &allGood, &resp.Manufacturer)
+		newProduct.Price = utils.GetFormDouble(r, "price", &resp.Error, &allGood, &resp.Price)
+		newProduct.Quantity = utils.GetFormInt(r, "quantity", &resp.Error, &allGood, &resp.Quantity)
+		newProduct.WarrantyDays = utils.GetFormInt(r, "warranty_days", &resp.Error, &allGood, &resp.WarrantyDays)
+		newProduct.ImageUrl = utils.GetFormString(r, "image_url", &resp.Error, &allGood, &resp.ImageUrl)
+		newProduct.Category.Id = utils.GetFormInt64(r, "category_id", &resp.Error, &allGood, &resp.CategoryId)
 
 		if allGood {
-			err := newProduct.dbSave()
+			err := newProduct.DbSave()
 			if err != nil {
 				log.Println(err)
 			}
@@ -117,7 +119,7 @@ func productCreateHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type EditProductTmplContext struct {
-	BaseTmplContext
+	utils.BaseTmplContext
 
 	Model        string
 	Manufacturer string
@@ -132,7 +134,7 @@ type EditProductTmplContext struct {
 	Error        string
 }
 
-func productEditHandler(w http.ResponseWriter, r *http.Request) {
+func ProductEditHandler(w http.ResponseWriter, r *http.Request) {
 	backLocation := r.URL.Query().Get("back")
 	productIdStr := r.PathValue("productId")
 	productId, err := strconv.ParseInt(productIdStr, 10, 64)
@@ -147,7 +149,7 @@ func productEditHandler(w http.ResponseWriter, r *http.Request) {
 		backLocation = "/products"
 	}
 
-	product, err := getProduct(productId)
+	product, err := db.GetProduct(productId)
 	if errors.Is(err, sql.ErrNoRows) {
 		w.WriteHeader(404)
 		w.Write([]byte("Unknown product!"))
@@ -161,7 +163,7 @@ func productEditHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp := EditProductTmplContext{
-		BaseTmplContext: BaseTmplContext{
+		BaseTmplContext: utils.BaseTmplContext{
 			Type: "products",
 		},
 		Model:        product.Model,
@@ -178,17 +180,17 @@ func productEditHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		allGood := true
 
-		product.Model = getFormStringNonEmpty(r, "model", &resp.Error, &allGood, &resp.Model)
-		product.Manufacturer = getFormStringNonEmpty(r, "manufacturer", &resp.Error, &allGood, &resp.Manufacturer)
-		product.Price = getFormDouble(r, "price", &resp.Error, &allGood, &resp.Price)
-		product.Quantity = getFormInt(r, "quantity", &resp.Error, &allGood, &resp.Quantity)
-		product.WarrantyDays = getFormInt(r, "warranty_days", &resp.Error, &allGood, &resp.ImageUrl)
-		product.ImageUrl = getFormString(r, "image_url", &resp.Error, &allGood, &resp.WarrantyDays)
-		product.Category.Id = getFormInt64(r, "category_id", &resp.Error, &allGood, &resp.CategoryId)
+		product.Model = utils.GetFormStringNonEmpty(r, "model", &resp.Error, &allGood, &resp.Model)
+		product.Manufacturer = utils.GetFormStringNonEmpty(r, "manufacturer", &resp.Error, &allGood, &resp.Manufacturer)
+		product.Price = utils.GetFormDouble(r, "price", &resp.Error, &allGood, &resp.Price)
+		product.Quantity = utils.GetFormInt(r, "quantity", &resp.Error, &allGood, &resp.Quantity)
+		product.WarrantyDays = utils.GetFormInt(r, "warranty_days", &resp.Error, &allGood, &resp.ImageUrl)
+		product.ImageUrl = utils.GetFormString(r, "image_url", &resp.Error, &allGood, &resp.WarrantyDays)
+		product.Category.Id = utils.GetFormInt64(r, "category_id", &resp.Error, &allGood, &resp.CategoryId)
 		resp.CategoryName = r.FormValue("_category_name")
 
 		if allGood {
-			err = product.dbSave()
+			err = product.DbSave()
 			if err == nil {
 				http.Redirect(w, r, backLocation, 301)
 				return
@@ -207,14 +209,14 @@ func productEditHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type ProductTmplContext struct {
-	BaseTmplContext
+	utils.BaseTmplContext
 
-	Product      Product
+	Product      db.Product
 	BackLocation string
 	Error        string
 }
 
-func productDeleteHandler(w http.ResponseWriter, r *http.Request) {
+func ProductDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	backLocation := r.URL.Query().Get("back")
 
 	productIdStr := r.PathValue("productId")
@@ -230,7 +232,7 @@ func productDeleteHandler(w http.ResponseWriter, r *http.Request) {
 		backLocation = "/products"
 	}
 
-	product, err := getProduct(productId)
+	product, err := db.GetProduct(productId)
 	if errors.Is(err, sql.ErrNoRows) {
 		w.WriteHeader(404)
 		w.Write([]byte("Unknown product!"))
@@ -244,7 +246,7 @@ func productDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp := ProductTmplContext{
-		BaseTmplContext: BaseTmplContext{
+		BaseTmplContext: utils.BaseTmplContext{
 			Type: "products",
 		},
 		Product:      product,
@@ -253,7 +255,7 @@ func productDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method == "POST" {
-		err = product.dbDelete()
+		err = product.DbDelete()
 		if err == nil {
 			http.Redirect(w, r, backLocation, 301)
 			return
@@ -271,13 +273,13 @@ func productDeleteHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type ProductWithCharacteristicsTmplContext struct {
-	BaseTmplContext
+	utils.BaseTmplContext
 
-	Product         Product
-	Characteristics []ProductCharacteristic
+	Product         db.Product
+	Characteristics []db.ProductCharacteristic
 }
 
-func productPageHandler(w http.ResponseWriter, r *http.Request) {
+func ProductPageHandler(w http.ResponseWriter, r *http.Request) {
 	productIdStr := r.PathValue("productId")
 	productId, err := strconv.ParseInt(productIdStr, 10, 64)
 	if err != nil {
@@ -285,7 +287,7 @@ func productPageHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	product, err := getProduct(productId)
+	product, err := db.GetProduct(productId)
 	if errors.Is(err, sql.ErrNoRows) {
 		w.WriteHeader(404)
 		w.Write([]byte("Unknown product!"))
@@ -298,8 +300,8 @@ func productPageHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var characteristics []ProductCharacteristic
-	characteristics, _, err = getProductCharacteristics(product.Id)
+	var characteristics []db.ProductCharacteristic
+	characteristics, _, err = db.GetProductCharacteristics(product.Id)
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(500)
@@ -308,7 +310,7 @@ func productPageHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp := ProductWithCharacteristicsTmplContext{
-		BaseTmplContext: BaseTmplContext{
+		BaseTmplContext: utils.BaseTmplContext{
 			Type: "products",
 		},
 		Product:         product,
@@ -322,7 +324,7 @@ func productPageHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func productAddCharacteristicHandler(w http.ResponseWriter, r *http.Request) {
+func ProductAddCharacteristicHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		w.WriteHeader(405)
 		w.Write([]byte("Method is not allowed!"))
@@ -337,15 +339,15 @@ func productAddCharacteristicHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	allGood := true
-	charId := getFormInt64(r, "characteristic_id", nil, &allGood, nil)
-	charValue := getFormStringNonEmpty(r, "value", nil, &allGood, nil)
+	charId := utils.GetFormInt64(r, "characteristic_id", nil, &allGood, nil)
+	charValue := utils.GetFormStringNonEmpty(r, "value", nil, &allGood, nil)
 
 	if !allGood {
 		http.Redirect(w, r, "/products/"+productIdStr, 301)
 		return
 	}
 
-	product, err := getProduct(productId)
+	product, err := db.GetProduct(productId)
 	if errors.Is(err, sql.ErrNoRows) {
 		w.WriteHeader(404)
 		w.Write([]byte("Unknown product!"))
@@ -358,8 +360,8 @@ func productAddCharacteristicHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var characteristic Characteristic
-	characteristic, err = getCharacteristic(charId)
+	var characteristic db.Characteristic
+	characteristic, err = db.GetCharacteristic(charId)
 	if errors.Is(err, sql.ErrNoRows) {
 		w.WriteHeader(404)
 		w.Write([]byte("Unknown characteristic!"))
@@ -372,14 +374,14 @@ func productAddCharacteristicHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	productChar := ProductCharacteristic{
+	productChar := db.ProductCharacteristic{
 		Id:             0,
 		ProductId:      product.Id,
 		Characteristic: characteristic,
 		Value:          charValue,
 	}
 
-	err = productChar.dbSave()
+	err = productChar.DbSave()
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(500)
@@ -390,7 +392,7 @@ func productAddCharacteristicHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/products/"+productIdStr, 301)
 }
 
-func productDeleteCharacteristicHandler(w http.ResponseWriter, r *http.Request) {
+func ProductDeleteCharacteristicHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		w.WriteHeader(405)
 		w.Write([]byte("Method is not allowed!"))
@@ -411,7 +413,7 @@ func productDeleteCharacteristicHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	characteristic, err := getProductCharacteristic(characteristicId, productId)
+	characteristic, err := db.GetProductCharacteristic(characteristicId, productId)
 	if errors.Is(err, sql.ErrNoRows) {
 		w.WriteHeader(404)
 		w.Write([]byte("Unknown characteristic!"))
@@ -424,7 +426,7 @@ func productDeleteCharacteristicHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	err = characteristic.dbDelete()
+	err = characteristic.DbDelete()
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(500)

@@ -1,16 +1,13 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
+	"go-lb4/db"
+	"go-lb4/handlers"
 	"net/http"
 
 	_ "github.com/go-sql-driver/mysql"
 )
-
-type BaseTmplContext struct {
-	Type string
-}
 
 /*
 База даних має містити щонайменше 5 таблиць.
@@ -19,57 +16,52 @@ type BaseTmplContext struct {
 Можна створювати БД за індивідуальним завданням, або взяти будь-яку свою БД, яка вже була створена на іншій дисципліні (курсовій роботі)
 */
 func main() {
-	db, err := sql.Open("mysql", "nure_golang_pz3:123456789@tcp(127.0.0.1:3306)/nure_golang_pz3?parseTime=true")
-	if err != nil {
-		panic(err)
-	}
-
-	defer db.Close()
-	database = db
+	db.InitDatabase("mysql", "nure_golang_pz3:123456789@tcp(127.0.0.1:3306)/nure_golang_pz3?parseTime=true")
+	defer db.CloseDatabase()
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/products", 301)
 	})
 
-	http.HandleFunc("/products", productsListHandler)
-	http.HandleFunc("/products/create", productCreateHandler)
-	http.HandleFunc("/products/search", productsSearchHandler)
-	http.HandleFunc("/products/{productId}/edit", productEditHandler)
-	http.HandleFunc("/products/{productId}/delete", productDeleteHandler)
-	http.HandleFunc("/products/{productId}", productPageHandler)
-	http.HandleFunc("/products/{productId}/characteristics", productAddCharacteristicHandler)
-	http.HandleFunc("/products/{productId}/characteristics/{characteristicId}/delete", productDeleteCharacteristicHandler)
+	http.HandleFunc("/products", handlers.ProductsListHandler)
+	http.HandleFunc("/products/create", handlers.ProductCreateHandler)
+	http.HandleFunc("/products/search", handlers.ProductsSearchHandler)
+	http.HandleFunc("/products/{productId}/edit", handlers.ProductEditHandler)
+	http.HandleFunc("/products/{productId}/delete", handlers.ProductDeleteHandler)
+	http.HandleFunc("/products/{productId}", handlers.ProductPageHandler)
+	http.HandleFunc("/products/{productId}/characteristics", handlers.ProductAddCharacteristicHandler)
+	http.HandleFunc("/products/{productId}/characteristics/{characteristicId}/delete", handlers.ProductDeleteCharacteristicHandler)
 
-	http.HandleFunc("/categories", categoriesListHandler)
-	http.HandleFunc("/categories/create", categoryCreateHandler)
-	http.HandleFunc("/categories/{categoryId}/edit", categoryEditHandler)
-	http.HandleFunc("/categories/{categoryId}/delete", categoryDeleteHandler)
-	http.HandleFunc("/categories/search", categoriesSearchHandler)
+	http.HandleFunc("/categories", handlers.CategoriesListHandler)
+	http.HandleFunc("/categories/create", handlers.CategoryCreateHandler)
+	http.HandleFunc("/categories/{categoryId}/edit", handlers.CategoryEditHandler)
+	http.HandleFunc("/categories/{categoryId}/delete", handlers.CategoryDeleteHandler)
+	http.HandleFunc("/categories/search", handlers.CategoriesSearchHandler)
 
-	http.HandleFunc("/characteristics", characteristicsListHandler)
-	http.HandleFunc("/characteristics/create", characteristicCreateHandler)
-	http.HandleFunc("/characteristics/{characteristicId}/edit", characteristicEditHandler)
-	http.HandleFunc("/characteristics/{characteristicId}/delete", characteristicDeleteHandler)
-	http.HandleFunc("/characteristics/search", characteristicsSearchHandler)
+	http.HandleFunc("/characteristics", handlers.CharacteristicsListHandler)
+	http.HandleFunc("/characteristics/create", handlers.CharacteristicCreateHandler)
+	http.HandleFunc("/characteristics/{characteristicId}/edit", handlers.CharacteristicEditHandler)
+	http.HandleFunc("/characteristics/{characteristicId}/delete", handlers.CharacteristicDeleteHandler)
+	http.HandleFunc("/characteristics/search", handlers.CharacteristicsSearchHandler)
 
-	http.HandleFunc("/customers", customersListHandler)
-	http.HandleFunc("/customers/create", customerCreateHandler)
-	http.HandleFunc("/customers/{customerId}/edit", customerEditHandler)
-	http.HandleFunc("/customers/{customerId}/delete", customerDeleteHandler)
-	http.HandleFunc("/customers/search", customersSearchHandler)
+	http.HandleFunc("/customers", handlers.CustomersListHandler)
+	http.HandleFunc("/customers/create", handlers.CustomerCreateHandler)
+	http.HandleFunc("/customers/{customerId}/edit", handlers.CustomerEditHandler)
+	http.HandleFunc("/customers/{customerId}/delete", handlers.CustomerDeleteHandler)
+	http.HandleFunc("/customers/search", handlers.CustomersSearchHandler)
 
-	http.HandleFunc("/orders", ordersListHandler)
-	http.HandleFunc("/orders/create", orderCreateHandler)
-	http.HandleFunc("/orders/{orderId}/edit", orderEditHandler)
-	http.HandleFunc("/orders/{orderId}/delete", orderDeleteHandler)
-	http.HandleFunc("/orders/{orderId}", orderPageHandler)
-	http.HandleFunc("/orders/{orderId}/products", orderAddProductHandler)
-	http.HandleFunc("/orders/{orderId}/products/{itemId}/delete", orderDeleteProductHandler)
+	http.HandleFunc("/orders", handlers.OrdersListHandler)
+	http.HandleFunc("/orders/create", handlers.OrderCreateHandler)
+	http.HandleFunc("/orders/{orderId}/edit", handlers.OrderEditHandler)
+	http.HandleFunc("/orders/{orderId}/delete", handlers.OrderDeleteHandler)
+	http.HandleFunc("/orders/{orderId}", handlers.OrderPageHandler)
+	http.HandleFunc("/orders/{orderId}/products", handlers.OrderAddProductHandler)
+	http.HandleFunc("/orders/{orderId}/products/{itemId}/delete", handlers.OrderDeleteProductHandler)
 
-	http.HandleFunc("/analysis", productsAnalysisHandler)
+	http.HandleFunc("/analysis", handlers.ProductsAnalysisHandler)
 
 	fmt.Println("Server is listening on port 8081 (http://127.0.0.1:8081)")
-	err = http.ListenAndServe("127.0.0.1:8081", nil)
+	err := http.ListenAndServe("127.0.0.1:8081", nil)
 	if err != nil {
 		panic(err)
 	}
