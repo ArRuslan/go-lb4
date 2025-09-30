@@ -5,6 +5,8 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+
+	"github.com/google/uuid"
 )
 
 func GetPageAndSize(req *http.Request) (int, int) {
@@ -121,4 +123,19 @@ func ReturnOnDatabaseError(err error, w http.ResponseWriter) bool {
 	w.WriteHeader(500)
 	w.Write([]byte("Database error occurred!"))
 	return true
+}
+
+func GetCartId(r *http.Request) uuid.UUID {
+	cartIdCookie, err := r.Cookie("cartId")
+	var cartId uuid.UUID
+	if err != nil {
+		cartId = uuid.New()
+	} else {
+		cartId, err = uuid.Parse(cartIdCookie.Value)
+		if err != nil {
+			cartId = uuid.New()
+		}
+	}
+
+	return cartId
 }

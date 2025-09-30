@@ -1,0 +1,48 @@
+{{template "layout.gohtml" .}}
+
+{{define "title"}}GoLang Pz3 - Cart{{end}}
+
+{{define "content"}}
+    <div class="d-flex align-items-center justify-content-between w-100">
+        {{ template "pagination.gohtml" .Pagination }}
+        <a href="/products" role="button" class="btn btn-primary flex-end">Add product</a>
+    </div>
+
+    {{- /*gotype: go-pz3/handlers.CartProductsListTmplContext*/ -}}
+
+    <table class="table mt-2">
+        <thead>
+        <tr>
+            <th scope="col">Id</th>
+            <th scope="col">Model</th>
+            <th scope="col">Manufacturer</th>
+            <th scope="col">Price</th>
+            <th scope="col">Quantity</th>
+            <th scope="col">Edit</th>
+            <th scope="col">Delete</th>
+        </tr>
+        </thead>
+        <tbody>
+        {{ range .Products }}
+            <tr>
+                <td scope="row"><a href="/products/{{ .Product.Id }}">{{ .Product.Id }}</a></td>
+                <td>{{ .Product.Model }}</td>
+                <td>{{ .Product.Manufacturer }}</td>
+                <td>{{ .Product.Price }}</td>
+                <td>{{ .Quantity }} / {{ .Product.Quantity }}</td>
+                <td>
+                    <form action="/cart/{{.Id}}/edit" method="POST" class="d-flex flex-row gap-2">
+                        <input type="number" name="quantity" placeholder="Quantity" value="{{.Quantity}}" min="1" max="{{ .Product.Quantity }}" class="form-control" style="width: 0; flex-grow: 1" required/>
+                        <button type="submit" class="btn btn-primary">Edit</button>
+                    </form>
+                </td>
+                <td>
+                    <form action="/cart/{{.Id}}/delete" method="POST" class="d-inline">
+                        <button type="submit" class="btn btn-danger">Delete</button>
+                    </form>
+                </td>
+            </tr>
+        {{ end }}
+        </tbody>
+    </table>
+{{end}}

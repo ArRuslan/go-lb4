@@ -52,6 +52,7 @@ func main() {
 	http.HandleFunc("/products/{productId}", handlers.ProductPageHandler)
 	http.HandleFunc("/products/{productId}/characteristics", handlers.ProductAddCharacteristicHandler)
 	http.HandleFunc("/products/{productId}/characteristics/{characteristicId}/delete", handlers.ProductDeleteCharacteristicHandler)
+	http.HandleFunc("/products/{productId}/add-to-cart", handlers.ProductAddToCartHandler)
 
 	http.HandleFunc("/categories", handlers.CategoriesListHandler)
 	http.HandleFunc("/categories/create", handlers.CategoryCreateHandler)
@@ -80,6 +81,10 @@ func main() {
 	http.HandleFunc("/orders/{orderId}/products/{itemId}/delete", handlers.OrderDeleteProductHandler)
 
 	http.HandleFunc("/analysis", handlers.ProductsAnalysisHandler)
+
+	http.HandleFunc("/cart", handlers.CartProductsListHandler)
+	http.HandleFunc("/cart/{itemId}/edit", handlers.CartProductEditHandler)
+	http.HandleFunc("/cart/{itemId}/delete", handlers.CartProductDeleteHandler)
 
 	fmt.Println("Server is listening on port 8081 (http://127.0.0.1:8081)")
 	err := http.ListenAndServe("127.0.0.1:8081", nil)

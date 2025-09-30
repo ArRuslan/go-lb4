@@ -56,3 +56,17 @@ CREATE TABLE IF NOT EXISTS `order_items` (
     FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE CASCADE,
     FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS `carts` (
+    `id` CHAR(36) PRIMARY KEY,
+    `last_access_time` DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS `cart_products` (
+    `id` BIGINT PRIMARY KEY AUTO_INCREMENT,
+    `cart_id` CHAR(36) NOT NULL,
+    `product_id` BIGINT NOT NULL,
+    `quantity` INT NOT NULL,
+    FOREIGN KEY (`cart_id`) REFERENCES `carts` (`id`) ON DELETE CASCADE,
+    FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE CASCADE
+);

@@ -11,6 +11,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	time "time"
 )
 
 type ProductsListTmplContext struct {
@@ -435,4 +436,59 @@ func ProductDeleteCharacteristicHandler(w http.ResponseWriter, r *http.Request) 
 	}
 
 	http.Redirect(w, r, "/products/"+productIdStr, 301)
+}
+
+func ProductAddToCartHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		w.WriteHeader(405)
+		w.Write([]byte("Method is not allowed!"))
+		return
+	}
+
+	productIdStr := r.PathValue("productId")
+	productId, err := strconv.ParseInt(productIdStr, 10, 64)
+	if err != nil {
+		http.Redirect(w, r, "/products", 301)
+		return
+	}
+
+	product, err := db.GetProduct(productId)
+	if errors.Is(err, sql.ErrNoRows) {
+		w.WriteHeader(404)
+		w.Write([]byte("Unknown product!"))
+		return
+	}
+	if utils.ReturnOnDatabaseError(err, w) {
+		return
+	}
+
+	cartId := utils.GetCartId(r)
+	http.SetCookie(w, &http.Cookie{Name: "cartId", Value: cartId.String(), Path: "/", HttpOnly: true, MaxAge: 86400})
+	cart, err := db.GetOrCreateCart(cartId)
+	if utils.ReturnOnDatabaseError(err, w) {
+		return
+	}
+
+	cart.LastAccessTime = time.Now()
+	if utils.ReturnOnDatabaseError(cart.DbSave(), w) {
+		return
+	}
+
+	cartProduct, err := db.GetCartProductByProductId(product.Id, cart.Id)
+	if errors.Is(err, sql.ErrNoRows) {
+		cartProduct = db.CartProduct{
+			Id:       0,
+			CartId:   cartId,
+			Product:  product,
+			Quantity: 1,
+		}
+	} else if utils.ReturnOnDatabaseError(err, w) {
+		return
+	}
+
+	if utils.ReturnOnDatabaseError(cartProduct.DbSave(), w) {
+		return
+	}
+
+	http.Redirect(w, r, "/products", 301)
 }

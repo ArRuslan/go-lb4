@@ -78,6 +78,17 @@
                         </a>
                     </li>
                     <li>
+                        <a href="/cart"
+                        {{ if eq .Type "cart" }}
+                            class="nav-link active" aria-current="page"
+                        {{ else }}
+                            class="nav-link link-dark"
+                        {{ end }}
+                        >
+                            Cart
+                        </a>
+                    </li>
+                    <li>
                         <a href="/analysis"
                         {{ if eq .Type "analysis" }}
                             class="nav-link active" aria-current="page"
