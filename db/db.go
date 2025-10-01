@@ -1,6 +1,7 @@
 package db
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"log"
@@ -114,4 +115,8 @@ func GetOrdersAverageTotal() (float64, error) {
 	}
 
 	return averageTotal, nil
+}
+
+func BeginTx(ctx context.Context) (*sql.Tx, error) {
+	return database.BeginTx(ctx, nil)
 }

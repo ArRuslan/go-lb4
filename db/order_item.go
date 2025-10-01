@@ -1,6 +1,9 @@
 package db
 
-import "database/sql"
+import (
+	"context"
+	"database/sql"
+)
 
 type OrderItem struct {
 	Id           int64
@@ -60,8 +63,17 @@ func GetOrderItem(itemId, orderId int) (OrderItem, error) {
 	return item, err
 }
 
-func CreateOrderItem(item OrderItem) error {
-	_, err := database.Exec(
+func CreateOrderItem(ctx context.Context, item OrderItem, tx *sql.Tx) error {
+	var dbExec func(context.Context, string, ...any) (sql.Result, error)
+
+	if tx == nil {
+		dbExec = database.ExecContext
+	} else {
+		dbExec = tx.ExecContext
+	}
+
+	_, err := dbExec(
+		ctx,
 		`INSERT INTO order_items (order_id, product_id, quantity, price_per_item) 
 		VALUES (?, ?, ?, ?);`,
 		item.OrderId, item.Product.Id, item.Quantity, item.PricePerItem,
@@ -69,16 +81,25 @@ func CreateOrderItem(item OrderItem) error {
 	return err
 }
 
-func (item *OrderItem) DbSave() error {
+func (item *OrderItem) DbSave(ctx context.Context, tx *sql.Tx) error {
+	var dbExec func(context.Context, string, ...any) (sql.Result, error)
+
+	if tx == nil {
+		dbExec = database.ExecContext
+	} else {
+		dbExec = tx.ExecContext
+	}
+
 	if item.Id > 0 {
-		_, err := database.Exec(
+		_, err := dbExec(
+			ctx,
 			`UPDATE order_items SET quantity=? WHERE id=?;`,
 			item.Quantity, item.Id,
 		)
 		return err
 	}
 
-	return CreateOrderItem(*item)
+	return CreateOrderItem(ctx, *item, tx)
 }
 
 func (item *OrderItem) DbDelete() error {

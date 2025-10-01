@@ -1,6 +1,7 @@
 package db
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"strings"
@@ -100,9 +101,20 @@ func GetCustomerByEmail(email string) (Customer, error) {
 	return customer, err
 }
 
-func (customer *Customer) DbSave() error {
+func (customer *Customer) DbSave(ctx context.Context, tx *sql.Tx) error {
+	var dbExec func(context.Context, string, ...any) (sql.Result, error)
+	var dbQueryRow func(context.Context, string, ...any) *sql.Row
+
+	if tx == nil {
+		dbExec = database.ExecContext
+		dbQueryRow = database.QueryRowContext
+	} else {
+		dbExec = tx.ExecContext
+		dbQueryRow = tx.QueryRowContext
+	}
+
 	if customer.Id == 0 {
-		row := database.QueryRow("SELECT c.id FROM customers c WHERE c.email = ?;", customer.Email)
+		row := dbQueryRow(ctx, "SELECT c.id FROM customers c WHERE c.email = ?;", customer.Email)
 		err := row.Scan(&customer.Id)
 		if err != nil && !errors.Is(err, sql.ErrNoRows) {
 			return err
@@ -110,7 +122,8 @@ func (customer *Customer) DbSave() error {
 	}
 
 	if customer.Id > 0 {
-		_, err := database.Exec(
+		_, err := dbExec(
+			ctx,
 			"UPDATE customers SET first_name=?, last_name=?, email=? WHERE id=?;",
 			customer.FirstName, customer.LastName, customer.Email, customer.Id,
 		)

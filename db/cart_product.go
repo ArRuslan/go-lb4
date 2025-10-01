@@ -1,6 +1,7 @@
 package db
 
 import (
+	"context"
 	"database/sql"
 
 	"github.com/google/uuid"
@@ -92,12 +93,16 @@ func CreateCartProduct(item CartProduct) error {
 	return err
 }
 
-func (item *CartProduct) DbSave() error {
+func (item *CartProduct) DbSave(ctx context.Context, tx *sql.Tx) error {
+	query := `UPDATE cart_products SET quantity=? WHERE id=?;`
+
 	if item.Id > 0 {
-		_, err := database.Exec(
-			`UPDATE cart_products SET quantity=? WHERE id=?;`,
-			item.Quantity, item.Id,
-		)
+		var err error
+		if tx != nil {
+			_, err = tx.ExecContext(ctx, query, item.Quantity, item.Id)
+		} else {
+			_, err = database.ExecContext(ctx, query, item.Quantity, item.Id)
+		}
 		return err
 	}
 

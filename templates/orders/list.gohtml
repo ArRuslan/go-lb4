@@ -17,6 +17,7 @@
             <th scope="col">Customer Name</th>
             <th scope="col">Customer Email</th>
             <th scope="col">Address</th>
+            <th scope="col">Status</th>
             <th scope="col">Actions</th>
         </tr>
         </thead>
@@ -27,6 +28,7 @@
                 <td>{{ .Customer.FirstName }} {{ .Customer.LastName }}</td>
                 <td>{{ .Customer.Email }}</td>
                 <td>{{ .Address }}</td>
+                <td>{{ .Status }}</td>
                 <td>
                     <a role="button" class="btn btn-primary" href="/orders/{{.Id}}/edit">Edit</a>
                     <a role="button" class="btn btn-danger" href="/orders/{{.Id}}/delete">Delete</a>

@@ -93,7 +93,7 @@ func CustomerCreateHandler(w http.ResponseWriter, r *http.Request) {
 		newCustomer.Email = utils.GetFormStringNonEmpty(r, "email", &resp.Error, &allGood, &resp.Email)
 
 		if allGood {
-			err := newCustomer.DbSave()
+			err := newCustomer.DbSave(r.Context(), nil)
 			if err != nil {
 				log.Println(err)
 			}
@@ -158,7 +158,7 @@ func CustomerEditHandler(w http.ResponseWriter, r *http.Request) {
 		customer.Email = utils.GetFormStringNonEmpty(r, "email", &resp.Error, &allGood, &resp.Email)
 
 		if allGood {
-			err = customer.DbSave()
+			err = customer.DbSave(r.Context(), nil)
 			if err == nil {
 				http.Redirect(w, r, "/customers", 301)
 				return

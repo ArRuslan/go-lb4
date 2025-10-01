@@ -1,0 +1,55 @@
+{{template "layout.gohtml" .}}
+
+{{define "title"}}GoLang Pz3 - Cart{{end}}
+
+{{define "content"}}
+    <div class="d-flex align-items-center justify-content-between w-100">
+        <h3>Summary: {{ .ProductsCount }} products for total of {{ .CartTotal }}</h3>
+    </div>
+
+    {{- /*gotype: go-pz3/handlers.CartPaymentTmplContext*/ -}}
+
+    <table class="table mt-2">
+        <thead>
+        <tr>
+            <th scope="col">Id</th>
+            <th scope="col">Model</th>
+            <th scope="col">Manufacturer</th>
+            <th scope="col">Price</th>
+            <th scope="col">Quantity</th>
+        </tr>
+        </thead>
+        <tbody>
+        {{ range .Products }}
+            <tr>
+                <td scope="row"><a href="/products/{{ .Product.Id }}">{{ .Product.Id }}</a></td>
+                <td>{{ .Product.Model }}</td>
+                <td>{{ .Product.Manufacturer }}</td>
+                <td>{{ .Product.Price }}</td>
+                <td>{{ .Quantity }}</td>
+            </tr>
+        {{ end }}
+        </tbody>
+    </table>
+
+    <form action="" method="POST">
+        <div class="mb-3">
+            <label for="input-email" class="form-label">Email</label>
+            <input type="email" name="email" placeholder="Customer Email" value="{{.CustomerEmail}}" class="form-control" id="input-email" required/>
+        </div>
+        <div class="mb-3">
+            <label for="input-first_name" class="form-label">First Name</label>
+            <input type="text" name="first_name" placeholder="Customer First Name" value="{{.CustomerFirstName}}" class="form-control" id="input-first_name" required/>
+        </div>
+        <div class="mb-3">
+            <label for="input-last_name" class="form-label">First Name</label>
+            <input type="text" name="last_name" placeholder="Customer First Name" value="{{.CustomerLastName}}" class="form-control" id="input-last_name" required/>
+        </div>
+        <div class="mb-3">
+            <label for="input-address" class="form-label">Address</label>
+            <input type="text" name="address" placeholder="Address" value="{{.Address}}" class="form-control" id="input-address" required/>
+        </div>
+
+        <button type="submit" class="btn btn-success ml-2 w-100">Proceed to payment</button>
+    </form>
+{{end}}

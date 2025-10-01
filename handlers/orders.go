@@ -74,7 +74,7 @@ func OrderCreateHandler(w http.ResponseWriter, r *http.Request) {
 		newOrder.Address = utils.GetFormStringNonEmpty(r, "address", &resp.Error, &allGood, &resp.Address)
 
 		if allGood {
-			err := newOrder.DbSave()
+			err := newOrder.DbSave(r.Context(), nil)
 			if err != nil {
 				log.Println(err)
 			}
@@ -149,7 +149,7 @@ func OrderEditHandler(w http.ResponseWriter, r *http.Request) {
 		order.Address = utils.GetFormStringNonEmpty(r, "address", &resp.Error, &allGood, &resp.Address)
 
 		if allGood {
-			err = order.DbSave()
+			err = order.DbSave(r.Context(), nil)
 			if err == nil {
 				http.Redirect(w, r, backLocation, 301)
 				return
@@ -313,10 +313,11 @@ func OrderAddProductHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Unknown order!"))
 		return
 	}
-	if err != nil {
-		log.Println(err)
-		w.WriteHeader(500)
-		w.Write([]byte("Database error occurred!"))
+	if utils.ReturnOnDatabaseError(err, w) {
+		return
+	}
+	if order.Status != "created" {
+		http.Redirect(w, r, "/orders/"+orderIdStr, 301)
 		return
 	}
 
@@ -326,10 +327,7 @@ func OrderAddProductHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Unknown product!"))
 		return
 	}
-	if err != nil {
-		log.Println(err)
-		w.WriteHeader(500)
-		w.Write([]byte("Database error occurred!"))
+	if utils.ReturnOnDatabaseError(err, w) {
 		return
 	}
 
@@ -347,23 +345,18 @@ func OrderAddProductHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	product.Quantity -= prodQuantity
-	err = product.DbSave()
-	if err != nil {
-		log.Println(err)
-		w.WriteHeader(500)
-		w.Write([]byte("Database error occurred!"))
+	err = product.DbSave(r.Context(), nil)
+	if utils.ReturnOnDatabaseError(err, w) {
 		return
 	}
 
-	err = orderItem.DbSave()
+	err = orderItem.DbSave(r.Context(), nil)
 	if err != nil {
 		product.Quantity += prodQuantity
-		err = product.DbSave()
-
-		log.Println(err)
-		w.WriteHeader(500)
-		w.Write([]byte("Database error occurred!"))
-		return
+		err = product.DbSave(r.Context(), nil)
+		if utils.ReturnOnDatabaseError(err, w) {
+			return
+		}
 	}
 
 	http.Redirect(w, r, "/orders/"+orderIdStr, 301)
@@ -413,7 +406,7 @@ func OrderDeleteProductHandler(w http.ResponseWriter, r *http.Request) {
 
 	product := item.Product
 	product.Quantity += item.Quantity
-	err = product.DbSave()
+	err = product.DbSave(r.Context(), nil)
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(500)

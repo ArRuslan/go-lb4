@@ -1,6 +1,10 @@
 package db
 
-import "database/sql"
+import (
+	"context"
+	"database/sql"
+	"errors"
+)
 
 type Product struct {
 	Id           int64
@@ -116,7 +120,15 @@ func GetProduct(productId int64) (Product, error) {
 	return product, err
 }
 
-func (product *Product) DbSave() error {
+func (product *Product) DbSave(ctx context.Context, tx *sql.Tx) error {
+	var dbExec func(context.Context, string, ...any) (sql.Result, error)
+
+	if tx == nil {
+		dbExec = database.ExecContext
+	} else {
+		dbExec = tx.ExecContext
+	}
+
 	if product.Id > 0 {
 		var imageUrl sql.NullString
 		if product.ImageUrl == "" {
@@ -132,7 +144,8 @@ func (product *Product) DbSave() error {
 			categoryId = sql.NullInt64{Int64: product.Category.Id, Valid: true}
 		}
 
-		_, err := database.Exec(
+		_, err := dbExec(
+			ctx,
 			`UPDATE products 
 			SET model=?, manufacturer=?, price=?, quantity=?, image_url=?, warranty_days=?, category_id=?
 			WHERE id=?;`,
@@ -142,6 +155,33 @@ func (product *Product) DbSave() error {
 	}
 
 	return CreateProduct(*product)
+}
+
+var NotEnoughQuantity = errors.New("specified product does not have enough quantity to add it to order")
+
+func (product *Product) SubtractQuantity(ctx context.Context, quantity int, tx *sql.Tx) error {
+	var dbExec func(context.Context, string, ...any) (sql.Result, error)
+	var dbQueryRow func(context.Context, string, ...any) *sql.Row
+
+	if tx == nil {
+		dbExec = database.ExecContext
+		dbQueryRow = database.QueryRowContext
+	} else {
+		dbExec = tx.ExecContext
+		dbQueryRow = tx.QueryRowContext
+	}
+
+	var enough bool
+	if err := dbQueryRow(ctx, "SELECT (quantity >= ?) FROM products WHERE id=?", quantity, product.Id).Scan(&enough); err != nil {
+		return err
+	}
+
+	if !enough {
+		return NotEnoughQuantity
+	}
+
+	_, err := dbExec(ctx, "UPDATE products SET quantity = (quantity - ?) WHERE id=?;", quantity, product.Id)
+	return err
 }
 
 func (product *Product) DbDelete() error {

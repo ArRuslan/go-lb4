@@ -102,7 +102,7 @@ func ProductCreateHandler(w http.ResponseWriter, r *http.Request) {
 		newProduct.Category.Id = utils.GetFormInt64(r, "category_id", &resp.Error, &allGood, &resp.CategoryId)
 
 		if allGood {
-			err := newProduct.DbSave()
+			err := newProduct.DbSave(r.Context(), nil)
 			if err != nil {
 				log.Println(err)
 			}
@@ -191,7 +191,7 @@ func ProductEditHandler(w http.ResponseWriter, r *http.Request) {
 		resp.CategoryName = r.FormValue("_category_name")
 
 		if allGood {
-			err = product.DbSave()
+			err = product.DbSave(r.Context(), nil)
 			if err == nil {
 				http.Redirect(w, r, backLocation, 301)
 				return
@@ -486,7 +486,7 @@ func ProductAddToCartHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if utils.ReturnOnDatabaseError(cartProduct.DbSave(), w) {
+	if utils.ReturnOnDatabaseError(cartProduct.DbSave(r.Context(), nil), w) {
 		return
 	}
 

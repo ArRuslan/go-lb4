@@ -70,3 +70,5 @@ CREATE TABLE IF NOT EXISTS `cart_products` (
     FOREIGN KEY (`cart_id`) REFERENCES `carts` (`id`) ON DELETE CASCADE,
     FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE CASCADE
 );
+
+ALTER TABLE `orders` ADD COLUMN `status` ENUM('created', 'payment', 'complete') NOT NULL DEFAULT 'created';

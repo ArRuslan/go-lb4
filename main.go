@@ -85,6 +85,7 @@ func main() {
 	http.HandleFunc("/cart", handlers.CartProductsListHandler)
 	http.HandleFunc("/cart/{itemId}/edit", handlers.CartProductEditHandler)
 	http.HandleFunc("/cart/{itemId}/delete", handlers.CartProductDeleteHandler)
+	http.HandleFunc("/cart/payment", handlers.CartPaymentHandler)
 
 	fmt.Println("Server is listening on port 8081 (http://127.0.0.1:8081)")
 	err := http.ListenAndServe("127.0.0.1:8081", nil)
