@@ -1,6 +1,8 @@
 module go-lb4
 
-go 1.24
+go 1.24.4
+
+toolchain go1.24.6
 
 require (
 	github.com/go-sql-driver/mysql v1.9.3

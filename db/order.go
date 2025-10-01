@@ -12,6 +12,7 @@ type Order struct {
 	CreatedAt time.Time
 	Address   string
 	Status    string
+	PayPalId  string
 }
 
 func GetOrders(page, pageSize int) ([]Order, int, error) {
@@ -21,7 +22,7 @@ func GetOrders(page, pageSize int) ([]Order, int, error) {
 		func(page, pageSize int) (*sql.Rows, error) {
 			return database.Query(
 				`SELECT 
-    				o.id, o.created_at, o.address, o.status,
+    				o.id, o.created_at, o.address, o.status, COALESCE(o.paypal_id, ''),
     				COALESCE(c.id, 0), COALESCE(c.first_name, ''), COALESCE(c.last_name, ''), COALESCE(c.email, '')
 				FROM orders o 
 				LEFT OUTER JOIN customers c ON o.customer_id = c.id
@@ -32,7 +33,7 @@ func GetOrders(page, pageSize int) ([]Order, int, error) {
 		func(rows *sql.Rows) (Order, error) {
 			order := Order{}
 			err := rows.Scan(
-				&order.Id, &order.CreatedAt, &order.Address, &order.Status,
+				&order.Id, &order.CreatedAt, &order.Address, &order.Status, &order.PayPalId,
 				&order.Customer.Id, &order.Customer.FirstName, &order.Customer.LastName, &order.Customer.Email,
 			)
 			return order, err
@@ -73,10 +74,17 @@ func CreateOrder(ctx context.Context, order *Order, tx *sql.Tx) error {
 		customerId = sql.NullInt64{Int64: order.Customer.Id, Valid: true}
 	}
 
+	var payPalId sql.NullString
+	if len(order.PayPalId) > 0 {
+		payPalId = sql.NullString{String: order.PayPalId, Valid: true}
+	} else {
+		payPalId = sql.NullString{}
+	}
+
 	result, err := dbExec(
 		ctx,
-		"INSERT INTO orders (address, customer_id, status) VALUES (?, ?, ?);",
-		order.Address, customerId, order.Status,
+		"INSERT INTO orders (address, customer_id, status, paypal_id) VALUES (?, ?, ?, ?);",
+		order.Address, customerId, order.Status, payPalId,
 	)
 	if err != nil {
 		return err
@@ -96,7 +104,7 @@ func GetOrder(orderId int) (Order, error) {
 
 	row := database.QueryRow(
 		`SELECT 
-    		o.id, o.created_at, o.address, o.status,
+    		o.id, o.created_at, o.address, o.status, COALESCE(o.paypal_id, ''),
     		COALESCE(c.id, 0), COALESCE(c.first_name, ''), COALESCE(c.last_name, ''), COALESCE(c.email, '')
 		FROM orders o 
 		LEFT OUTER JOIN customers c ON o.customer_id = c.id
@@ -104,7 +112,7 @@ func GetOrder(orderId int) (Order, error) {
 		orderId,
 	)
 	err := row.Scan(
-		&order.Id, &order.CreatedAt, &order.Address, &order.Status,
+		&order.Id, &order.CreatedAt, &order.Address, &order.Status, &order.PayPalId,
 		&order.Customer.Id, &order.Customer.FirstName, &order.Customer.LastName, &order.Customer.Email,
 	)
 
@@ -128,10 +136,17 @@ func (order *Order) DbSave(ctx context.Context, tx *sql.Tx) error {
 			customerId = sql.NullInt64{Int64: order.Customer.Id, Valid: true}
 		}
 
+		var payPalId sql.NullString
+		if len(order.PayPalId) > 0 {
+			payPalId = sql.NullString{String: order.PayPalId, Valid: true}
+		} else {
+			payPalId = sql.NullString{}
+		}
+
 		_, err := dbExec(
 			ctx,
-			`UPDATE orders SET address=?, customer_id=?, status=? WHERE id=?;`,
-			order.Address, customerId, order.Status, order.Id,
+			`UPDATE orders SET address=?, customer_id=?, status=?, paypal_id=? WHERE id=?;`,
+			order.Address, customerId, order.Status, payPalId, order.Id,
 		)
 		return err
 	}

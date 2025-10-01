@@ -416,3 +416,47 @@ func OrderDeleteProductHandler(w http.ResponseWriter, r *http.Request) {
 
 	http.Redirect(w, r, "/orders/"+orderIdStr, 301)
 }
+
+func OrderFinishPaymentHandler(w http.ResponseWriter, r *http.Request) {
+	orderIdStr := r.PathValue("orderId")
+	orderId, err := strconv.Atoi(orderIdStr)
+	if err != nil {
+		http.Redirect(w, r, "/orders", 301)
+		return
+	}
+
+	var order db.Order
+	order, err = db.GetOrder(orderId)
+	if errors.Is(err, sql.ErrNoRows) {
+		w.WriteHeader(404)
+		w.Write([]byte("Unknown order!"))
+		return
+	}
+	if utils.ReturnOnDatabaseError(err, w) {
+		return
+	}
+	if order.Status != "payment" {
+		http.Redirect(w, r, "/orders/"+orderIdStr, 301)
+		return
+	}
+
+	completed, err := payPal.CheckOrderCompleted(order.PayPalId)
+	if err == nil && completed {
+		order.Status = "complete"
+		if utils.ReturnOnDatabaseError(order.DbSave(r.Context(), nil), w) {
+			return
+		}
+		http.Redirect(w, r, "/orders/"+orderIdStr, 301)
+		return
+	}
+
+	w.Header().Set("Refresh", "5")
+
+	tmpl, _ := template.ParseFiles("templates/orders/finish-payment.gohtml", "templates/layout.gohtml")
+	err = tmpl.Execute(w, utils.BaseTmplContext{
+		Type: "orders",
+	})
+	if err != nil {
+		log.Println(err)
+	}
+}

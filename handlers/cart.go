@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"go-lb4/db"
+	"go-lb4/paypal"
 	"go-lb4/utils"
 	"html/template"
 	"log"
@@ -171,6 +172,12 @@ type CartPaymentTmplContext struct {
 	Error string
 }
 
+var payPal = paypal.NewClient(
+	"AUHPZ6xZAFKv6YDkPRsu72hz65WaIfkLABWsnsQ--BmsZK79U9KlqlmB1j5-4aBeCFigHRQVW4E-tYPA",
+	"ELsP5wMsmQGFmpD8PA-vgWROmtBv7a9Nfz4kDiMWcRggl0JTWcGqBYWB-SRXXRNT6CJYAXctrNnG5ZBL",
+	paypal.ApiSandbox,
+)
+
 func CartPaymentHandler(w http.ResponseWriter, r *http.Request) {
 	cartId := utils.GetCartId(r)
 	http.SetCookie(w, &http.Cookie{Name: "cartId", Value: cartId.String(), Path: "/", HttpOnly: true, MaxAge: 86400})
@@ -270,7 +277,19 @@ func CartPaymentHandler(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			http.Redirect(w, r, fmt.Sprintf("/orders/%d", order.Id), 301)
+			orderId, err := payPal.CreateOrder(strconv.FormatInt(order.Id, 10), "USD", total)
+			if err != nil {
+				log.Printf("Failed to create paypal order: %s\n", err)
+				http.Redirect(w, r, fmt.Sprintf("/orders/%d", order.Id), 301)
+			} else {
+				order.Status = "payment"
+				order.PayPalId = orderId
+				if utils.ReturnOnDatabaseError(order.DbSave(ctx, nil), w) {
+					return
+				}
+				http.Redirect(w, r, "https://www.sandbox.paypal.com/checkoutnow?token="+orderId, 302)
+			}
+
 			return
 		}
 	}

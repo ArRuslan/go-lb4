@@ -79,6 +79,7 @@ func main() {
 	http.HandleFunc("/orders/{orderId}", handlers.OrderPageHandler)
 	http.HandleFunc("/orders/{orderId}/products", handlers.OrderAddProductHandler)
 	http.HandleFunc("/orders/{orderId}/products/{itemId}/delete", handlers.OrderDeleteProductHandler)
+	http.HandleFunc("/orders/{orderId}/finish-payment", handlers.OrderFinishPaymentHandler)
 
 	http.HandleFunc("/analysis", handlers.ProductsAnalysisHandler)
 

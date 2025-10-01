@@ -72,3 +72,4 @@ CREATE TABLE IF NOT EXISTS `cart_products` (
 );
 
 ALTER TABLE `orders` ADD COLUMN `status` ENUM('created', 'payment', 'complete') NOT NULL DEFAULT 'created';
+ALTER TABLE `orders` ADD COLUMN `paypal_id` CHAR(128) DEFAULT NULL;
