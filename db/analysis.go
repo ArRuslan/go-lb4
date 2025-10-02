@@ -67,12 +67,7 @@ func GetOrdersAverageTotal() (float64, error) {
 	return averageTotal, nil
 }
 
-type CountPerDay struct {
-	Day   time.Time
-	Count int
-}
-
-func GetCustomersCountPerDay() ([]CountPerDay, error) {
+func GetCustomersCountPerDay() ([]FloatStatPerDay, error) {
 	rows, err := database.Query(
 		`SELECT DATE(created_at) as date, COUNT(DISTINCT customer_id) as num_customers
 		FROM orders
@@ -85,11 +80,11 @@ func GetCustomersCountPerDay() ([]CountPerDay, error) {
 
 	defer rows.Close()
 
-	var result []CountPerDay
+	var result []FloatStatPerDay
 
 	for rows.Next() {
-		var row CountPerDay
-		err = rows.Scan(&row.Day, &row.Count)
+		var row FloatStatPerDay
+		err = rows.Scan(&row.Day, &row.Value)
 		if err != nil {
 			return nil, err
 		}
@@ -99,7 +94,7 @@ func GetCustomersCountPerDay() ([]CountPerDay, error) {
 	return result, nil
 }
 
-func GetDayWithMinOrderCount() (time.Time, error) {
+func GetDayWithMinOrderCount() (time.Time, int, error) {
 	row := database.QueryRow(
 		`SELECT day, order_count
 		FROM (
@@ -118,16 +113,17 @@ func GetDayWithMinOrderCount() (time.Time, error) {
 	)
 
 	var minDay time.Time
+	var count int
 
-	err := row.Scan(&minDay)
+	err := row.Scan(&minDay, &count)
 	if err != nil {
-		return minDay, err
+		return minDay, 0, err
 	}
 
-	return minDay, nil
+	return minDay, count, nil
 }
 
-func GetDayWithMaxOrderCount() (time.Time, error) {
+func GetDayWithMaxOrderCount() (time.Time, int, error) {
 	row := database.QueryRow(
 		`SELECT day, order_count
 		FROM (
@@ -145,14 +141,15 @@ func GetDayWithMaxOrderCount() (time.Time, error) {
 		LIMIT 1;`,
 	)
 
-	var minDay time.Time
+	var maxDay time.Time
+	var count int
 
-	err := row.Scan(&minDay)
+	err := row.Scan(&maxDay, &count)
 	if err != nil {
-		return minDay, err
+		return maxDay, 0, err
 	}
 
-	return minDay, nil
+	return maxDay, count, nil
 }
 
 type FloatStatPerDay struct {

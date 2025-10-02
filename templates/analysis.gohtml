@@ -32,17 +32,137 @@
     </dl>
 {{end}}
 
+{{define "product_pair_item"}}
+    {{- /*gotype: go-pz3.ProductWithCount*/ -}}
+    <dl class="row">
+        <dt class="col-sm-3">Id</dt>
+        <dd class="col-sm-9">{{ .Id }}</dd>
+
+        <dt class="col-sm-3">Category</dt>
+        <dd class="col-sm-9">
+            {{ if .Category.Name }} {{ .Category.Name }} {{ else }} - {{ end }}
+        </dd>
+
+        <dt class="col-sm-3">Model</dt>
+        <dd class="col-sm-9">{{ .Model }}</dd>
+
+        <dt class="col-sm-3">Manufacturer</dt>
+        <dd class="col-sm-9">{{ .Manufacturer }}</dd>
+
+        <dt class="col-sm-3">Price</dt>
+        <dd class="col-sm-9">{{ .Price }}</dd>
+
+        <dt class="col-sm-3">Warranty Days</dt>
+        <dd class="col-sm-9">{{ .WarrantyDays }}</dd>
+    </dl>
+{{end}}
+
 {{define "content"}}
-    <div class="row">
-        <div class="col">
-            <h3>Most ordered product</h3>
-            {{template "most_least_ordered_product" .MostOrdered}}
+    <div class="col">
+        <div class="row">
+            <div class="col">
+                <h3>Most ordered product</h3>
+                {{template "most_least_ordered_product" .MostOrdered}}
+            </div>
+            <div class="col">
+                <h3>Most common with most ordered product</h3>
+                {{template "most_least_ordered_product" .ProductMostCommonWithMostOrdered}}
+            </div>
         </div>
+
         <div class="col">
             <h3>Least ordered product</h3>
             {{template "most_least_ordered_product" .LeastOrdered}}
         </div>
+
+        <h3>Average order total: {{ .AverageOrderTotal }}</h3>
+        <h3>Day with minimum order count: {{ .MinOrdersDay.Day.Format "02.01.2006" }} ({{ .MinOrdersDay.Value }} orders)</h3>
+        <h3>Day with maximum order count: {{ .MaxOrdersDay.Day.Format "02.01.2006" }} ({{ .MaxOrdersDay.Value }} orders)</h3>
+
+        <div class="position-relative w-100">
+            <canvas id="chart-customers_per_day" class="mw-100"></canvas>
+        </div>
+
+        <div class="row d-flex justify-content-between">
+            <div class="position-relative w-50">
+                <canvas id="chart-avg_total_per_day" class="mw-100"></canvas>
+            </div>
+            <div class="position-relative w-50">
+                <canvas id="chart-med_total_per_day" class="mw-100"></canvas>
+            </div>
+        </div>
+
+        <h2>Most ordered product pairs:</h2>
+        {{ range .MostOrderedProductPairs }}
+            <h4>Were ordered together {{ .Count }} times</h4>
+            <div class="row">
+                <div class="col">
+                    {{template "product_pair_item" index .Products 0}}
+                </div>
+                <div class="col">
+                    {{template "product_pair_item" index .Products 1}}
+                </div>
+            </div>
+        {{ end }}
+
+        <h2>Least ordered product pairs:</h2>
+        {{ range .LeastOrderedProductPairs }}
+            <h4>Were ordered together {{ .Count }} times</h4>
+            <div class="row">
+                <div class="col">
+                    {{template "product_pair_item" index .Products 0}}
+                </div>
+                <div class="col">
+                    {{template "product_pair_item" index .Products 1}}
+                </div>
+            </div>
+        {{ end }}
+
     </div>
 
-    <h3>Average order total: {{ .AverageOrderTotal }}</h3>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.min.js"></script>
+    <script>
+        const chartCustomersPerDay = document.getElementById("chart-customers_per_day");
+        const chartAvgTotalPerDay = document.getElementById("chart-avg_total_per_day");
+        const chartMedTotalPerDay = document.getElementById("chart-med_total_per_day");
+
+        new Chart(chartCustomersPerDay, {
+            type: "bar",
+            data: {
+                labels: [{{ range .CustomersPerDay }}"{{ .Day.Format "02.01.2006" }}",{{ end }}],
+                datasets: [{
+                    label: '# of customers per day',
+                    data: [{{ range .CustomersPerDay }}{{ .Value }},{{ end }}],
+                    borderWidth: 1
+                }]
+            },
+            options: {scales: {y: {beginAtZero: true, type: "logarithmic"}}}
+        });
+
+        new Chart(chartAvgTotalPerDay, {
+            type: "bar",
+            data: {
+                labels: [{{ range .AvgTotalPerDay }}"{{ .Day.Format "02.01.2006" }}",{{ end }}],
+                datasets: [{
+                    label: 'average order total per day',
+                    data: [{{ range .AvgTotalPerDay }}{{ .Value }},{{ end }}],
+                    borderWidth: 1
+                }]
+            },
+            options: {scales: {y: {beginAtZero: true, type: "logarithmic"}}}
+        });
+
+        new Chart(chartMedTotalPerDay, {
+            type: "bar",
+            data: {
+                labels: [{{ range .MedTotalPerDay }}"{{ .Day.Format "02.01.2006" }}",{{ end }}],
+                datasets: [{
+                    label: 'median order total per day',
+                    data: [{{ range .MedTotalPerDay }}{{ .Value }},{{ end }}],
+                    borderWidth: 1
+                }]
+            },
+            options: {scales: {y: {beginAtZero: true, type: "logarithmic"}}}
+        });
+    </script>
 {{end}}
