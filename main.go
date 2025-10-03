@@ -41,8 +41,10 @@ func main() {
 	defer db.CloseDatabase()
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		http.Redirect(w, r, "/products", 301)
+		http.Redirect(w, r, "/catalog", 301)
 	})
+
+	http.HandleFunc("/catalog", handlers.ProductCatalogHandler)
 
 	http.HandleFunc("/products", handlers.ProductsListHandler)
 	http.HandleFunc("/products/create", handlers.ProductCreateHandler)
