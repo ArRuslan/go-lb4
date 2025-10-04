@@ -19,7 +19,7 @@
             <th scope="col">Manufacturer</th>
             <th scope="col">Price</th>
             <th scope="col">Quantity</th>
-            <th scope="col">Image Url</th>
+            <th scope="col">Has Image</th>
             <th scope="col">Warranty Days</th>
             <th scope="col">Actions</th>
         </tr>
@@ -33,7 +33,7 @@
                 <td>{{ .Manufacturer }}</td>
                 <td>{{ .Price }}</td>
                 <td>{{ .Quantity }}</td>
-                <td>{{ .ImageUrl }}</td>
+                <td>{{ if .ImageUrl }}Yes{{ else }}No{{ end }}</td>
                 <td>{{ .WarrantyDays }}</td>
                 <td>
                     <a role="button" class="btn btn-primary" href="/products/{{.Id}}/edit">Edit</a>
