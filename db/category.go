@@ -52,7 +52,7 @@ func CreateCategory(category Category) error {
 	return err
 }
 
-func GetCategory(categoryId int) (Category, error) {
+func GetCategory(categoryId int64) (Category, error) {
 	var category Category
 
 	row := database.QueryRow(

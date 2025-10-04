@@ -119,7 +119,7 @@ type EditCategoryTmplContext struct {
 
 func CategoryEditHandler(w http.ResponseWriter, r *http.Request) {
 	categoryIdStr := r.PathValue("categoryId")
-	categoryId, err := strconv.Atoi(categoryIdStr)
+	categoryId, err := strconv.ParseInt(categoryIdStr, 10, 64)
 	if err != nil {
 		http.Redirect(w, r, "/categories", 301)
 		return
@@ -180,7 +180,7 @@ type CategoryTmplContext struct {
 
 func CategoryDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	categoryIdStr := r.PathValue("categoryId")
-	categoryId, err := strconv.Atoi(categoryIdStr)
+	categoryId, err := strconv.ParseInt(categoryIdStr, 10, 64)
 	if err != nil {
 		http.Redirect(w, r, "/categories", 301)
 		return

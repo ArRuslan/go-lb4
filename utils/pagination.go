@@ -2,6 +2,7 @@ package utils
 
 import (
 	"html/template"
+	"strings"
 )
 
 type PaginationInfo struct {
@@ -10,6 +11,7 @@ type PaginationInfo struct {
 	Count    int
 
 	UrlPath string
+	Query   string
 }
 
 type PaginationResult struct {
@@ -20,12 +22,22 @@ type PaginationResult struct {
 	NextPage     int
 
 	UrlPath string
+	Query   template.URL
 }
 
 var TmplPaginationFuncs = template.FuncMap{
 	"calculatePagination": func(pagination PaginationInfo) PaginationResult {
+		var queryParams []string
+		for _, param := range strings.Split(pagination.Query, "&") {
+			if strings.HasPrefix(param, "page=") || strings.HasPrefix(param, "pageSize=") {
+				continue
+			}
+			queryParams = append(queryParams, param)
+		}
+
 		result := PaginationResult{
 			UrlPath: pagination.UrlPath,
+			Query:   template.URL(strings.Join(queryParams, "&")),
 		}
 
 		totalPages := (pagination.Count + pagination.PageSize - 1) / pagination.PageSize
@@ -54,5 +66,8 @@ var TmplPaginationFuncs = template.FuncMap{
 		}
 
 		return result
+	},
+	"unescape": func(s string) template.HTML {
+		return template.HTML(s)
 	},
 }

@@ -4,15 +4,15 @@
     <ul class="pagination mb-0">
         {{ $active := "" }}
         {{ $pagination := (calculatePagination .)}}
-        <li class="page-item"><a class="page-link {{$pagination.PrevDisabled}}" href="{{$pagination.UrlPath}}?page={{$pagination.PrevPage}}&pageSize={{.PageSize}}" {{$pagination.PrevDisabled}}>Previous</a></li>
+        <li class="page-item"><a class="page-link {{$pagination.PrevDisabled}}" href="{{$pagination.UrlPath}}?page={{$pagination.PrevPage}}&pageSize={{.PageSize}}&{{$pagination.Query}}" {{$pagination.PrevDisabled}}>Previous</a></li>
         {{ range $pagination.Pages }}
             {{ if eq . $.Page}}
                 {{ $active = "active" }}
             {{ else }}
                 {{ $active = "" }}
             {{ end }}
-            <li class="page-item"><a class="page-link {{$active}}" href="{{$pagination.UrlPath}}?page={{.}}&pageSize={{$.PageSize}}">{{ . }}</a></li>
+            <li class="page-item"><a class="page-link {{$active}}" href="{{$pagination.UrlPath}}?page={{.}}&pageSize={{$.PageSize}}&{{$pagination.Query}}">{{ . }}</a></li>
         {{ end }}
-        <li class="page-item"><a class="page-link {{$pagination.NextDisabled}}" href="{{$pagination.UrlPath}}?page={{$pagination.NextPage}}&pageSize={{.PageSize}}" {{$pagination.NextDisabled}}>Next</a></li>
+        <li class="page-item"><a class="page-link {{$pagination.NextDisabled}}" href="{{$pagination.UrlPath}}?page={{$pagination.NextPage}}&pageSize={{.PageSize}}&{{$pagination.Query}}" {{$pagination.NextDisabled}}>Next</a></li>
     </ul>
 </nav>

@@ -77,6 +77,39 @@ func SearchProducts(model string, limit int) ([]Product, error) {
 	return products, err
 }
 
+func SearchProductsCatalog(page, pageSize int, category Category, query string) ([]Product, int, error) {
+	return getRowsAndCount(
+		page,
+		pageSize,
+		func(page, pageSize int) (*sql.Rows, error) {
+			return database.Query(
+				`SELECT 
+    				p.id, p.model, p.manufacturer, p.price, p.quantity, COALESCE(p.image_url, ''), p.warranty_days,
+    				COALESCE(c.id, 0), COALESCE(c.name, ''), COALESCE(c.description, '')
+				FROM products p 
+				LEFT OUTER JOIN categories c ON p.category_id = c.id
+				WHERE (LOWER(p.model) LIKE CONCAT(?, '%') OR LOWER(p.manufacturer) LIKE CONCAT(?, '%')) AND (? = 0 OR p.category_id = ?)
+				ORDER BY p.id LIMIT ? OFFSET ?;`,
+				query, query, category.Id, category.Id, pageSize, (page-1)*pageSize,
+			)
+		},
+		func(rows *sql.Rows) (Product, error) {
+			product := Product{}
+			err := rows.Scan(
+				&product.Id, &product.Model, &product.Manufacturer, &product.Price, &product.Quantity, &product.ImageUrl, &product.WarrantyDays,
+				&product.Category.Id, &product.Category.Name, &product.Category.Description,
+			)
+			return product, err
+		},
+		func() *sql.Row {
+			return database.QueryRow(
+				"SELECT COUNT(*) FROM products WHERE (LOWER(model) LIKE CONCAT(?, '%') OR LOWER(manufacturer) LIKE CONCAT(?, '%')) AND (? = 0 OR category_id = ?);",
+				query, query, category.Id, category.Id,
+			)
+		},
+	)
+}
+
 func CreateProduct(product Product) error {
 	var imageUrl sql.NullString
 	if product.ImageUrl == "" {

@@ -44,7 +44,18 @@ func GetFormStringNonEmpty(req *http.Request, name string, errorText *string, va
 	return value
 }
 
-func GetFormString(req *http.Request, name string, _ *string, _ *bool, out *string) string {
+func GetFormString(req *http.Request, name string, _ *string, valid *bool, out *string) string {
+	if err := req.ParseForm(); err != nil {
+		log.Printf("Failed to parse form: %s\n", err)
+		*valid = false
+		return ""
+	}
+
+	if !req.PostForm.Has(name) && !req.URL.Query().Has(name) {
+		*valid = false
+		return ""
+	}
+
 	value := req.FormValue(name)
 
 	if out != nil {

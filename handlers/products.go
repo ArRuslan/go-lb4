@@ -445,10 +445,16 @@ func ProductAddToCartHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	backUrlGood := true
+	backUrl := utils.GetFormString(r, "back_url", nil, &backUrlGood, nil)
+	if !backUrlGood {
+		backUrl = "/products"
+	}
+
 	productIdStr := r.PathValue("productId")
 	productId, err := strconv.ParseInt(productIdStr, 10, 64)
 	if err != nil {
-		http.Redirect(w, r, "/products", 301)
+		http.Redirect(w, r, backUrl, 301)
 		return
 	}
 
@@ -490,5 +496,5 @@ func ProductAddToCartHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, "/products", 301)
+	http.Redirect(w, r, backUrl, 301)
 }
