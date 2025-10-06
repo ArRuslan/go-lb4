@@ -12,6 +12,47 @@
 </head>
 <body>
 
+<nav class="navbar navbar-expand-lg bg-body-tertiary">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">GoLang Lb4</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link active" aria-current="page" href="/">Home</a>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Manage
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li class="nav-item"><a href="/products" class="dropdown-item">Products</a></li>
+                        <li><a href="/categories" class="dropdown-item">Categories</a></li>
+                        <li><a href="/characteristics" class="dropdown-item">Characteristics</a></li>
+                        <li><a href="/customers" class="dropdown-item">Customers</a></li>
+                        <li><a href="/orders" class="dropdown-item">Orders</a></li>
+
+                        <li><hr class="dropdown-divider"></li>
+
+                        <li><a href="/cart" class="dropdown-item">Cart</a></li>
+                        <li><a href="/analysis" class="dropdown-item">Analysis</a></li>
+                    </ul>
+                </li>
+            </ul>
+            <div class="d-flex">
+                <a href="/cart" class="btn btn-outline-success">
+                    Go to cart
+                    {{ if .CartItemsCount }}
+                        <span class="badge text-bg-secondary">{{ .CartItemsCount }}</span>
+                    {{ end }}
+                </a>
+            </div>
+        </div>
+    </div>
+</nav>
+
 <div class="container-fluid d-flex flex-column gap-3 p-3">
     <form method="GET" action="" class="d-flex flex-row gap-2">
         <input type="hidden" name="category_id" value="{{ .Category.Id }}" id="input-category_id"/>

@@ -44,6 +44,26 @@ func GetCartProducts(cartId uuid.UUID) ([]CartProduct, int, error) {
 	)
 }
 
+func GetCartProductsCount(cartId uuid.UUID) (int, error) {
+	_, count, err := getRowsAndCount(
+		1,
+		0,
+		func(page, pageSize int) (*sql.Rows, error) {
+			return database.Query(`SELECT 0;`)
+		},
+		func(rows *sql.Rows) (int, error) {
+			var zero int
+			err := rows.Scan(&zero)
+			return zero, err
+		},
+		func() *sql.Row {
+			return database.QueryRow("SELECT COUNT(*) FROM `cart_products` WHERE cart_id=?;", cartId)
+		},
+	)
+
+	return count, err
+}
+
 func GetCartProduct(itemId int64, cartId uuid.UUID) (CartProduct, error) {
 	var item CartProduct
 
