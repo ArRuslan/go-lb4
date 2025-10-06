@@ -53,8 +53,7 @@ func GetCartProductsCount(cartId uuid.UUID) (int, error) {
 		},
 		func(rows *sql.Rows) (int, error) {
 			var zero int
-			err := rows.Scan(&zero)
-			return zero, err
+			return 0, rows.Scan(&zero)
 		},
 		func() *sql.Row {
 			return database.QueryRow("SELECT COUNT(*) FROM `cart_products` WHERE cart_id=?;", cartId)

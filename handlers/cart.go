@@ -306,3 +306,21 @@ func CartPaymentHandler(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 	}
 }
+
+func RemoveOldCartsHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		w.WriteHeader(405)
+		w.Write([]byte("Method is not allowed!"))
+		return
+	}
+
+	backUrlGood := true
+	backUrl := utils.GetFormString(r, "back_url", nil, &backUrlGood, nil)
+	if !backUrlGood {
+		backUrl = "/cart"
+	}
+
+	db.CleanOldCartsChan <- true
+
+	http.Redirect(w, r, backUrl, 301)
+}

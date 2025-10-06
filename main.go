@@ -39,6 +39,9 @@ import (
 func main() {
 	db.InitDatabase("mysql", "nure_golang_pz3:123456789@tcp(127.0.0.1:3306)/nure_golang_pz3?parseTime=true")
 	defer db.CloseDatabase()
+	go func() {
+		db.CleanOldCartsLoop(10)
+	}()
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/catalog", 301)
@@ -89,6 +92,7 @@ func main() {
 	http.HandleFunc("/cart/{itemId}/edit", handlers.CartProductEditHandler)
 	http.HandleFunc("/cart/{itemId}/delete", handlers.CartProductDeleteHandler)
 	http.HandleFunc("/cart/payment", handlers.CartPaymentHandler)
+	http.HandleFunc("/cart/remove-old", handlers.RemoveOldCartsHandler)
 
 	fmt.Println("Server is listening on port 8081 (http://127.0.0.1:8081)")
 	err := http.ListenAndServe("127.0.0.1:8081", nil)

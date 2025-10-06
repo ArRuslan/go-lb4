@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"time"
 )
 
 var database *sql.DB
@@ -58,4 +59,39 @@ func getRowsAndCount[T any](page, pageSize int, getRows func(int, int) (*sql.Row
 
 func BeginTx(ctx context.Context) (*sql.Tx, error) {
 	return database.BeginTx(ctx, nil)
+}
+
+func CleanOldCarts() {
+	exec, err := database.Exec("DELETE FROM carts WHERE last_access_time < NOW() - INTERVAL 7 DAY;")
+	if err != nil {
+		log.Printf("Failed to remove old carts: %s\n", err)
+		return
+	}
+
+	affected, err := exec.RowsAffected()
+	if err != nil {
+		log.Printf("Failed to get number of deleted carts: %s\n", err)
+		return
+	}
+
+	log.Printf("Deleted %d old carts\n", affected)
+}
+
+var CleanOldCartsChan = make(chan bool)
+
+func CleanOldCartsLoop(waitSec int) {
+	duration := time.Duration(waitSec) * time.Second
+	timer := time.NewTimer(duration)
+
+	for {
+		select {
+		case <-CleanOldCartsChan:
+			log.Println("Removing old carts because of CleanOldCartsChan")
+		case <-timer.C:
+			log.Println("Removing old carts because of timer")
+		}
+
+		timer.Reset(duration)
+		CleanOldCarts()
+	}
 }
